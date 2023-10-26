@@ -3,9 +3,11 @@
 #include "pico/cyw43_arch.h"
 #include "lwipopts.h"
 #include "cgi.h"
+#include "driver/motor/motor_controller.h"
+#include "driver/encoder/wheel_encoder.h"
 
-#define WIFI_SSID ""
-#define WIFI_PASSWORD ""
+#define WIFI_SSID "POCO F4 GT"
+#define WIFI_PASSWORD "qqsypbcppz7dt4m"
 
 #define LEFT_MOTOR_PWM 0
 #define RIGHT_MOTOR_PWM 1
@@ -43,6 +45,7 @@ int main() {
     stdio_init_all();
 
     configure_wifi();
+    //sleep_ms(5000);
 
     // Configure sensors using GPIO power
     configure_sensor_power(LEFT_ENCODER_POWER);
@@ -52,16 +55,29 @@ int main() {
     init_motor_controller(LEFT_MOTOR_PWM,
                           RIGHT_MOTOR_PWM,
                           LEFT_MOTOR_FORWARD,
-                          LEFT_MOTOR_BACKWARD,
                           RIGHT_MOTOR_FORWARD,
-                          RIGHT_MOTOR_BACKWARD,
-                          LEFT_ENCODER_INPUT,
-                          RIGHT_ENCODER_INPUT);
+                          LEFT_MOTOR_BACKWARD,
+                          RIGHT_MOTOR_BACKWARD);
 
-    // Configure web server
+    // Configure wheel encoder
+    init_wheel_encoder(LEFT_ENCODER_INPUT,
+                       RIGHT_ENCODER_INPUT);
+
+
+    // Test move
+//    move_forward(1);
+//    sleep_ms(20000);
+//    move_backward(1);
+//    sleep_ms(20000);
+//    turn_left(1);
+//    sleep_ms(20000);
+//    turn_right(1);
+//    sleep_ms(20000);
+//    stop();
+
+    // Temporary web server for testing
     httpd_init();
     cgi_init();
-
 
     while (true);
 

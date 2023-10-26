@@ -1,31 +1,32 @@
 #include "lwip/apps/httpd.h"
-#include "motor_controller.h"
+#include "driver/motor/motor_controller.h"
 
 const char * cgi_move_handler(int iIndex, int iNumParams, char *pcParam[], char *pcValue[]) {
 
     printf("Moved instruction received\n");
 
-    if (strcmp(pcParam[0], "move") == 0) {
+    if (strcmp(pcParam[0], "move") == 0 &&
+        strcmp(pcParam[1], "left_power") == 0 &&
+        strcmp(pcParam[2], "right_power") == 0) {
+
+        float left_power = atoi(pcValue[1]) / 100.0f;
+        float right_power = atoi(pcValue[2]) / 100.0f;
 
         if (strcmp(pcValue[0], "up") == 0) {
-            printf("[FORWARD]\n");
-            motor_set_direction(MOTOR_DIR_FRONT);
-            motor_move(10000);
+            printf("[FORWARD] Left: %.2f, Right: %.2f\n", left_power, right_power);
+            move_forward(left_power, right_power);
         } else if (strcmp(pcValue[0], "down") == 0) {
-            printf("[BACKWARD]\n");
-            motor_set_direction(MOTOR_DIR_BACK);
-            motor_move(10000);
+            printf("[BACKWARD] Left: %.2f, Right: %.2f\n", left_power, right_power);
+            move_backward(left_power, right_power);
         } else if (strcmp(pcValue[0], "left") == 0) {
             printf("[LEFT]\n");
-            motor_set_direction(MOTOR_DIR_LEFT);
-            motor_move(20);
+            turn_left(1);
         } else if (strcmp(pcValue[0], "right") == 0) {
             printf("[RIGHT]\n");
-            motor_set_direction(MOTOR_DIR_RIGHT);
-            motor_move(20);
+            turn_right(1);
         } else if (strcmp(pcValue[0], "stop") == 0) {
             printf("[STOP]\n");
-            motor_stop();
+            stop();
         }
 
 

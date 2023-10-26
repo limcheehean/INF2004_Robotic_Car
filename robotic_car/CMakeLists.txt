@@ -1,7 +1,7 @@
 add_executable(robotic_car
         robotic_car.c
-        motor_controller.h
-        )
+        driver/motor/motor_controller.h
+        driver/encoder/wheel_encoder.h)
 
 target_include_directories(robotic_car PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
@@ -15,7 +15,7 @@ target_link_libraries(robotic_car
         hardware_pwm
         )
 
-pico_enable_stdio_usb(robotic_car TRUE)
-pico_enable_stdio_uart(robotic_car FALSE)
+pico_enable_stdio_usb(robotic_car 1)
+pico_enable_stdio_uart(robotic_car 0)
 
 pico_add_extra_outputs(robotic_car)
