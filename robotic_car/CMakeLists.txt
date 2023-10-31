@@ -19,3 +19,20 @@ pico_enable_stdio_usb(robotic_car 1)
 pico_enable_stdio_uart(robotic_car 0)
 
 pico_add_extra_outputs(robotic_car)
+
+
+
+add_executable(barcode_driver
+        driver/ir_sensor/barcode.c
+)
+target_include_directories(barcode_driver PRIVATE
+        ${CMAKE_CURRENT_LIST_DIR}
+        )
+target_link_libraries(barcode_driver
+        pico_stdlib
+        )
+
+pico_enable_stdio_usb(barcode_driver 1)
+pico_enable_stdio_uart(barcode_driver 0)
+
+pico_add_extra_outputs(barcode_driver)
