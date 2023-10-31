@@ -79,10 +79,11 @@ void barcode_init() {
  */
 int main() {
 
+    stdio_init_all();
+
     /* Declare in main function */
     barcode_init();
 
-    stdio_init_all();
 
     while (true);
 }
