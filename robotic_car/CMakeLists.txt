@@ -1,7 +1,9 @@
 add_executable(robotic_car
         robotic_car.c
         driver/motor/motor_controller.h
-        driver/encoder/wheel_encoder.h)
+        driver/encoder/wheel_encoder.h
+        test/motor_test.h
+        )
 
 target_include_directories(robotic_car PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
