@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pico-W Wifi Webserver</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            text-align: center;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #007bff;
+            font-size: 28px;
+        }
+
+        h2 {
+            color: #333;
+            font-size: 22px;
+        }
+
+        p {
+            font-size: 18px;
+        }
+
+        button {
+            background-color: #007bff;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+        }
+
+        a {
+            text-decoration: none;
+            color: #007bff;
+            font-size: 18px;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Pico-W Wifi Webserver</h1>
+    <br>
+    <h2>Server Side Includes (SSI):</h2>
+    <p>Voltage: <!--#volt--></p>
+    <p>Temp: <!--#temp--> C</p>
+    <p>LED is: <!--#led--></p>
+    <br>
+    <h2>Common Gateway Interface (CGI):</h2>
+    <a href="/led.cgi?led=1"><button>Turn LED ON</button></a>
+    <a href="/led.cgi?led=0"><button>Turn LED OFF</button></a>
+    <br>
+    <br>
+    <a href="/index.shtml">Refresh</a>
+</body>
+</html>

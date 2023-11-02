@@ -6,8 +6,8 @@
 #include "driver/motor/motor_controller.h"
 #include "driver/encoder/wheel_encoder.h"
 
-#define WIFI_SSID "POCO F4 GT"
-#define WIFI_PASSWORD "qqsypbcppz7dt4m"
+#define WIFI_SSID "ravirani"
+#define WIFI_PASSWORD "kanagarani18"
 
 #define LEFT_MOTOR_PWM 0
 #define RIGHT_MOTOR_PWM 1
@@ -20,13 +20,15 @@
 #define LEFT_ENCODER_POWER 28
 #define RIGHT_ENCODER_POWER 22
 
-void configure_wifi() {
+void configure_wifi()
+{
 
     cyw43_arch_init();
     cyw43_arch_enable_sta_mode();
 
     printf("Attempting to connect to %s\n", WIFI_SSID);
-    while (cyw43_arch_wifi_connect_timeout_ms(WIFI_SSID, WIFI_PASSWORD, CYW43_AUTH_WPA2_AES_PSK, 30000) != 0) {
+    while (cyw43_arch_wifi_connect_timeout_ms(WIFI_SSID, WIFI_PASSWORD, CYW43_AUTH_WPA2_AES_PSK, 30000) != 0)
+    {
         printf("Connection failed, trying again...\n");
     }
 
@@ -34,18 +36,20 @@ void configure_wifi() {
 }
 
 // Temporary power for sensors, use 3V3 when splitter available
-void configure_sensor_power(uint gpio) {
+void configure_sensor_power(uint gpio)
+{
     gpio_set_function(gpio, GPIO_FUNC_SIO);
     gpio_set_dir(gpio, GPIO_OUT);
     gpio_put(gpio, 1);
 }
 
-int main() {
+int main()
+{
 
     stdio_init_all();
 
     configure_wifi();
-    //sleep_ms(5000);
+    // sleep_ms(5000);
 
     // Configure sensors using GPIO power
     configure_sensor_power(LEFT_ENCODER_POWER);
@@ -63,22 +67,21 @@ int main() {
     init_wheel_encoder(LEFT_ENCODER_INPUT,
                        RIGHT_ENCODER_INPUT);
 
-
     // Test move
-//    move_forward(1);
-//    sleep_ms(20000);
-//    move_backward(1);
-//    sleep_ms(20000);
-//    turn_left(1);
-//    sleep_ms(20000);
-//    turn_right(1);
-//    sleep_ms(20000);
-//    stop();
+    //    move_forward(1);
+    //    sleep_ms(20000);
+    //    move_backward(1);
+    //    sleep_ms(20000);
+    //    turn_left(1);
+    //    sleep_ms(20000);
+    //    turn_right(1);
+    //    sleep_ms(20000);
+    //    stop();
 
     // Temporary web server for testing
     httpd_init();
     cgi_init();
 
-    while (true);
-
+    while (true)
+        ;
 }
