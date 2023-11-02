@@ -75,3 +75,22 @@ pico_enable_stdio_usb(pico_w_webserver TRUE)
 pico_enable_stdio_uart(pico_w_webserver FALSE)
 
 pico_add_extra_outputs(pico_w_webserver)
+
+
+
+# Magnetnometer
+add_executable(magnetnometer_driver
+        driver/magnetnometer/magnetnometer.c
+)
+target_include_directories(magnetnometer_driver PRIVATE
+        ${CMAKE_CURRENT_LIST_DIR}
+        )
+target_link_libraries(magnetnometer_driver
+        pico_stdlib
+        hardware_i2c
+        )
+
+pico_enable_stdio_usb(magnetnometer_driver 1)
+pico_enable_stdio_uart(magnetnometer_driver 0)
+
+pico_add_extra_outputs(magnetnometer_driver)
