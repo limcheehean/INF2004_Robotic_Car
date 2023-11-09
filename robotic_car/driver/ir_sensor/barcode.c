@@ -10,10 +10,24 @@
 
 #include "pico/stdlib.h"
 #include <stdio.h>
+#include "FreeRTOS.h"
+#include "task.h"
+#include "semphr.h"
 
 #define BARCODE_PIN 9
 
 uint32_t last_press_time = 0;  // Store the last time the button was pressed
+
+// Store old distance
+float g_barcode_old_distance;
+
+// Task handle to notify when to get distance
+static TaskHandle_t g_barcode_notify_dist_task;
+
+// (Unit testing) Shared distance buffer between wheel encode 
+// and barcode driver
+float g_shared_dist_buffer;
+SemaphoreHandle_t g_barcode_dist_mutex;
 
 bool g_barcode_array[10];
 int8_t g_barcode_array_count;
@@ -22,6 +36,7 @@ int8_t g_barcode_array_count;
 struct barcode_struct {
     uint64_t last_time; /* Kept solely to determine time_passed */
     uint16_t time_passed; /* Used to determine pulse width */
+
     // High is white
     bool high;           /* Determine if high or low pulse */
     bool is_short;
@@ -30,7 +45,13 @@ struct barcode_struct {
 // Buffer to store barcode info
 static struct barcode_struct g_barcode_buffer;
 
+// (Unit testing) TaskHandle to store distance
+static TaskHandle_t g_barcode_dist_task;
+
+
 void barcode_edge_irq(uint gpio, uint32_t events){
+
+    xTaskNotify(g_barcode_notify_dist_task, events, eIncrement);
 
     if (!(events == (GPIO_IRQ_EDGE_FALL | GPIO_IRQ_EDGE_RISE))){
 
@@ -86,11 +107,39 @@ void barcode_edge_irq(uint gpio, uint32_t events){
         printf("]\n");
         */
     }
+
+    /* <!> Add digital support (debounce and assume long -> short ?)*/
     else {
         printf("<Barcode> Edge rise and fall detected simultaneously");
     }
 }
 
+void barcode_distance_task(__unused void *params){
+    while (1){
+        /**
+         * ulTaskNotifyTake notes:
+         * For xClearCountOnExit parameter,
+         * pdFALSE -> Task notification value is decremented before Take exits
+         * pdTRUE -> Task notification value is reset to 0 before Take exits
+         * 
+         * Returns task notification value before decrement or clear 
+         * */
+        //From irq: xTaskNotify(g_barcode_notify_dist_task, events, eIncrement);
+
+        // Block here until notified
+        uint32_t task_notif_val = 0;
+        xTaskNotifyWait(0,0, &task_notif_val, portMAX_DELAY);
+
+        //uint32_t task_notif_val = ulTaskNotifyTake(pdFALSE, portMAX_DELAY);
+
+        // Block until you get mutex
+        xSemaphoreTake(g_barcode_dist_mutex, portMAX_DELAY);
+        printf("I am notified of event %d\n", task_notif_val);
+        xSemaphoreGive(g_barcode_dist_mutex);
+        vTaskDelay(500);
+    }
+
+}
 
 void barcode_init() {
     // Configure the button pin as an input
@@ -103,7 +152,15 @@ void barcode_init() {
     g_barcode_buffer.high = 0;
     g_barcode_array_count = 0;
 
+    g_barcode_dist_mutex = xSemaphoreCreateMutex();
+
     gpio_set_irq_enabled_with_callback(BARCODE_PIN, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &barcode_edge_irq);
+    
+    // Create tasks
+    //xTaskCreate(barcode_distance_task, "BarcodeDistTask", configMINIMAL_STACK_SIZE, NULL, 8, &g_barcode_notify_dist_task);
+
+    //Should be in main
+    //vTaskStartScheduler();
 
 }
 
@@ -118,7 +175,10 @@ int main() {
 
     /* Declare in main function */
     barcode_init();
+    vTaskStartScheduler();
 
+    /* Unit testing */
+    float g_shared_dist_buffer = 0;
 
     while (true);
 }

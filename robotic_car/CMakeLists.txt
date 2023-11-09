@@ -32,6 +32,7 @@ target_include_directories(barcode_driver PRIVATE
         )
 target_link_libraries(barcode_driver
         pico_stdlib
+        FreeRTOS-Kernel-Heap4 # FreeRTOS kernel and dynamic heap
         )
 
 pico_enable_stdio_usb(barcode_driver 1)
