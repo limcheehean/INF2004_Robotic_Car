@@ -1,13 +1,20 @@
 /**
  * Interrupt-based ir line sensor
  * Usage instruction:
- *  - Connect BARCODE_PIN (Pin 9) to Analogue Pin of IR Line Sensor
- *      Reason: Digital pin may trigger interrupt of EDGE RISE and EDGE LOW at same time (event mask will include both high and low in 1 interrupt)
+ *  - Connect BARCODE_PIN (Pin 9) to Analogue Pin of IR Line Sensor (or Digital Pin, with minimum sensitivity)
+ *      Note that Digital pin may trigger interrupt of EDGE RISE and EDGE LOW at same time (event mask will include both high and low in 1 interrupt)
  *      Each interrupt from Analogue pin will only be EDGE RISE or EDGE LOW, not both at same time
  *      This is needed if the car moves too fast.
  * - Debounce is not required, tested with no issues so far
  * */
 
+/**
+ * Note: Analogue pin seens to interrupt only occur at at maximum level
+ * 
+ * To do:
+ *  - Read barcode
+ *  - Read barcode in reverse
+ * */
 #include "pico/stdlib.h"
 #include <stdio.h>
 #include "FreeRTOS.h"
@@ -45,18 +52,22 @@ struct barcode_struct {
 // Buffer to store barcode info
 static struct barcode_struct g_barcode_buffer;
 
-// (Unit testing) TaskHandle to store distance
-static TaskHandle_t g_barcode_dist_task;
-
-
 void barcode_edge_irq(uint gpio, uint32_t events){
+    //printf("g_shared_dist_buffer is %2.2f\n", g_shared_dist_buffer);
 
-    xTaskNotify(g_barcode_notify_dist_task, events, eIncrement);
+    /* Get current time*/
+    uint32_t current_time = to_ms_since_boot(get_absolute_time());
 
+    /* Debounce */
+    /*
+    if ((current_time - g_barcode_buffer.last_time) < 10) {
+        printf("DEBOUNCE\n");
+        return;
+    }*/
+    /* <!> Work on binary operations */
+    /* If not both FALL or RISE*/
     if (!(events == (GPIO_IRQ_EDGE_FALL | GPIO_IRQ_EDGE_RISE))){
 
-        /* Get current time*/
-        uint32_t current_time = to_ms_since_boot(get_absolute_time());
 
         uint16_t old_time_passed = g_barcode_buffer.time_passed;
 
@@ -68,30 +79,30 @@ void barcode_edge_irq(uint gpio, uint32_t events){
         /* <!> Work on *2 */
         if (old_time_passed == 0) {printf("<Barcode length is an estimate for now!>\n");}
         if (old_time_passed > g_barcode_buffer.time_passed * 2){
-                printf("<Barcode length>\tShort\n");
+                //printf("<Barcode length>\tShort\n");
                 g_barcode_buffer.is_short = 1;
             }
         else if (old_time_passed * 2 < g_barcode_buffer.time_passed){
-                printf("<Barcode length>\tLong\n");
+                //printf("<Barcode length>\tLong\n");
                 g_barcode_buffer.is_short = 0;
             }
         else {
             if (g_barcode_buffer.is_short){
-                printf("<Barcode length>\tShort\n");
+                //printf("<Barcode length>\tShort\n");
             }
             else{
-                printf("<Barcode length>\tLong\n");
+                //printf("<Barcode length>\tLong\n");
             }
         }
         if (events == GPIO_IRQ_EDGE_RISE){
             g_barcode_buffer.high = false;
-            printf("<Barcode> Low pulse for %d ms\n", g_barcode_buffer.time_passed);
+            printf("<Barcode> |%d\t | Low\t| %d ms\t|%2.2f\t|\n",g_barcode_buffer.is_short, g_barcode_buffer.time_passed, g_shared_dist_buffer);
         }
 
         /* Exited black region */
         else if (events == GPIO_IRQ_EDGE_FALL){
             g_barcode_buffer.high = true;
-            printf("<Barcode> High pulse for %d ms\n", g_barcode_buffer.time_passed);
+            printf("<Barcode> |%d\t |High\t| %d ms\t| %2.2f\t|\n",g_barcode_buffer.is_short, g_barcode_buffer.time_passed, g_shared_dist_buffer);
         }
 
         /* Push barcode length into array. Short - 1; Long - 0;*/
@@ -109,36 +120,55 @@ void barcode_edge_irq(uint gpio, uint32_t events){
     }
 
     /* <!> Add digital support (debounce and assume long -> short ?)*/
+    /* Debounce or not, this may occur if another interrupt was hogging up processor time*/
+    /** 
+     * Its' possible to ignore R&F, but additional logic is needed to ensure that
+     * after a RISE, a FALL occurs, and vice versa
+     * */
     else {
-        printf("<Barcode> Edge rise and fall detected simultaneously");
+        //printf("<Barcode> Edge rise and fall detected simultaneously\n");
+        printf("R&F\n");
     }
 }
 
-void barcode_distance_task(__unused void *params){
-    while (1){
-        /**
-         * ulTaskNotifyTake notes:
-         * For xClearCountOnExit parameter,
-         * pdFALSE -> Task notification value is decremented before Take exits
-         * pdTRUE -> Task notification value is reset to 0 before Take exits
-         * 
-         * Returns task notification value before decrement or clear 
-         * */
-        //From irq: xTaskNotify(g_barcode_notify_dist_task, events, eIncrement);
+/***
+ * Unit testing functions
+ * 
+ * */
+// (Unit testing) TaskHandle to store distance
+static TaskHandle_t g_barcode_dist_task;
 
-        // Block here until notified
-        uint32_t task_notif_val = 0;
-        xTaskNotifyWait(0,0, &task_notif_val, portMAX_DELAY);
+// (Unit testing) Distance Incrementing
+void dist_increm_irq(uint gpio, uint32_t events){
+    
+    /* Simulates wheel encode isr's calculation */
+    /* Increased computation load by 3 for testing purposes */ 
+    uint64_t current_time = time_us_64();
+    g_shared_dist_buffer += 1;
+    float a = (float)g_shared_dist_buffer / 40 * 33.2f;
+    float b = 33.2f / 40 / ((float)(current_time - g_barcode_buffer.last_time) / 1000000.0f);
+    current_time = current_time;
 
-        //uint32_t task_notif_val = ulTaskNotifyTake(pdFALSE, portMAX_DELAY);
+    current_time = time_us_64();
+    g_shared_dist_buffer -= 1;
+    a = (float)g_shared_dist_buffer / 40 * 33.2f;
+    b = 33.2f / 40 / ((float)(current_time - g_barcode_buffer.last_time) / 1000000.0f);
+    current_time = current_time;
 
-        // Block until you get mutex
-        xSemaphoreTake(g_barcode_dist_mutex, portMAX_DELAY);
-        printf("I am notified of event %d\n", task_notif_val);
-        xSemaphoreGive(g_barcode_dist_mutex);
-        vTaskDelay(500);
+    current_time = time_us_64();
+    g_shared_dist_buffer += 1;
+    a = (float)g_shared_dist_buffer / 40 * 33.2f;
+    b = 33.2f / 40 / ((float)(current_time - g_barcode_buffer.last_time) / 1000000.0f);
+    current_time = current_time;
+}
+
+void generic_irq(uint gpio, uint32_t events){
+    if (gpio == 27){
+        dist_increm_irq(gpio, events);
     }
-
+    else if (gpio == 9){
+        barcode_edge_irq(gpio, events);
+    }
 }
 
 void barcode_init() {
@@ -152,7 +182,6 @@ void barcode_init() {
     g_barcode_buffer.high = 0;
     g_barcode_array_count = 0;
 
-    g_barcode_dist_mutex = xSemaphoreCreateMutex();
 
     gpio_set_irq_enabled_with_callback(BARCODE_PIN, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &barcode_edge_irq);
     
@@ -175,10 +204,16 @@ int main() {
 
     /* Declare in main function */
     barcode_init();
-    vTaskStartScheduler();
+    //vTaskStartScheduler();
 
     /* Unit testing */
     float g_shared_dist_buffer = 0;
+    gpio_init(27);
+    gpio_set_dir(27, GPIO_IN);
+    gpio_pull_up(27);
+    gpio_set_irq_enabled_with_callback(27, GPIO_IRQ_LEVEL_LOW /* Must not start with 27 connected to gnd*/, true, &generic_irq);
+
+    
 
     while (true);
 }
