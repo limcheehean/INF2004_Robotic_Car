@@ -42,7 +42,7 @@ typedef struct {
 typedef struct{
     TaskHandle_t barcode_interpret_task;
     bool barcode_array[10];
-    uint16_t barcode_array_count;
+    uint16_t barcode_array_index;
     BarcodeISRData barcode_isr_data;
 } BarcodeModule;
 
@@ -74,6 +74,26 @@ BarcodeISRData * get_barcode_isr_data(){
 }*/
 #endif
 
+void interpret_barcode(){
+    BarcodeModule * bm = get_barcode_module();
+    bool past_8[8];
+    int index_to_copy = 0;
+    bool is_start_stop = 1;
+    int start_stop_barcode[] = {1,0,1,1,0,1,0,1,1};
+    for (int i = 7; i > -1; i--){
+        index_to_copy = bm->barcode_array_index - (7-i);
+        if (index_to_copy < 0) {index_to_copy += 10;}
+        past_8[i] = bm->barcode_array[bm->barcode_array_index]; 
+        if (start_stop_barcode[i] != bm->barcode_array[index_to_copy]){
+            is_start_stop = 0;
+            break;
+        }
+    }
+    if (is_start_stop){
+        printf("<BARCODE START STOP> * detected!\n");
+    }
+}
+
 void barcode_edge_irq(uint gpio, uint32_t events){
     //printf("g_shared_dist_buffer is %2.2f\n", g_shared_dist_buffer);
 
@@ -94,7 +114,7 @@ void barcode_edge_irq(uint gpio, uint32_t events){
         if (old_time_passed == 0) {printf("<Barcode length is an estimate for now!>\n");}
         if (old_time_passed > barcode_isr_data->time_passed * 2){
                 //printf("<Barcode length>\tShort\n");
-                bm->barcode_isr_data.is_short = 1;
+                barcode_isr_data->is_short = 1;
             }
         else if (old_time_passed * 2 < barcode_isr_data->time_passed){
                 //printf("<Barcode length>\tLong\n");
@@ -120,18 +140,22 @@ void barcode_edge_irq(uint gpio, uint32_t events){
         }
 
         /* Push barcode length into array. Short - 1; Long - 0;*/
-        bm->barcode_array[bm->barcode_array_count++] = bm->barcode_isr_data.is_short;
-        printf("Pushed data in barcode, count is %d, address is %p\n", bm->barcode_array_count, &(bm->barcode_array_count));
-        if (bm->barcode_array_count > 9) {
-            printf("Printing array count...\n");
-            /* Print barcode array */
-            printf("[");
-            for(int loop = 0; loop < 10; loop++){
-                printf("%d ,", bm->barcode_array[loop]);
-            }
-            printf("]\n");
-            bm->barcode_array_count = 0;
+        bm->barcode_array[bm->barcode_array_index++] = bm->barcode_isr_data.is_short;
+
+        /* Circular buffer */
+        if (bm->barcode_array_index > 9) {
+            bm->barcode_array_index = 0;
         }
+        printf("[");
+        int index_to_print = 0;
+        for(int loop = 0; loop < 10; loop++){
+            index_to_print = loop + bm->barcode_array_index;
+            if (index_to_print > 9){index_to_print -= 10;}
+            printf("%d ,", bm->barcode_array[index_to_print]);
+        }
+        printf("]\n");
+        interpret_barcode();
+        
     }
 
     /* <!> Add digital support (debounce and assume long -> short ?)*/
@@ -157,7 +181,7 @@ void barcode_module_init() {
     barcode_isr_data->last_time = 0;
     barcode_isr_data->time_passed = 0;
     barcode_isr_data->high = 0;
-    barcode_module -> barcode_array_count = 0;
+    barcode_module -> barcode_array_index = 0;
 
     gpio_set_irq_enabled_with_callback(BARCODE_PIN, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &barcode_edge_irq);
     
