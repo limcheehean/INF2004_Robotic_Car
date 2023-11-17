@@ -24,6 +24,7 @@
 #define BARCODE_PIN 9
 
 #define BARCODE_BUFFER_SIZE 10
+#define BARCODE_BUFFER_READ_OFFSET (BARCODE_BUFFER_SIZE - 9)
 //#define BARCODE_MODULE_LOCAL
 
 
@@ -138,15 +139,15 @@ void barcode_buffer_put(bool data_to_insert){
 
 void interpret_barcode(){
     BarcodeModule * bm = get_barcode_module();
-    bool past_8[8];
     int index_to_copy = 0;
     bool is_start_stop = 1;
     int start_stop_barcode_fwd[] = {1,0,1,1,0,1,0,1,1};
     int start_stop_barcode_bwd[] = {1,1,0,1,0,1,1,0,1};
 
-    for (int i = 0; i < 10; i++){
+    
+    for (int i = BARCODE_BUFFER_READ_OFFSET; i < 10; i++){
         
-        if (barcode_buffer_get(i) != start_stop_barcode_bwd[i]){
+        if (barcode_buffer_get(i) != start_stop_barcode_fwd[i - BARCODE_BUFFER_READ_OFFSET]){
             is_start_stop = 0;
             break;
         }
