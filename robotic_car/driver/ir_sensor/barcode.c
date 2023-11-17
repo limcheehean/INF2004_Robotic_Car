@@ -20,6 +20,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "semphr.h"
+#include "FreeRTOS.h"
 
 #define BARCODE_PIN 9
 
@@ -48,8 +49,7 @@ typedef struct {
 
 typedef struct{
     TaskHandle_t barcode_interpret_task;
-    bool barcode_array[10];
-    uint16_t barcode_array_index;
+    bool is_reading;
     BarcodeISRData barcode_isr_data;
     BarcodeBuffer barcode_buffer;
 } BarcodeModule;
@@ -137,24 +137,71 @@ void barcode_buffer_put(bool data_to_insert){
 
 }
 
+void barcode_buffer_clear(){
+    BarcodeBuffer * barcode_buffer = & (get_barcode_module() -> barcode_buffer);
+    for (int i = 0; i < BARCODE_BUFFER_SIZE; i++){
+        barcode_buffer->array[i] = 0;
+    }
+}
+
 void interpret_barcode(){
     BarcodeModule * bm = get_barcode_module();
     int index_to_copy = 0;
     bool is_start_stop = 1;
-    int start_stop_barcode_fwd[] = {1,0,1,1,0,1,0,1,1};
-    int start_stop_barcode_bwd[] = {1,1,0,1,0,1,1,0,1};
+    static int start_stop_barcode_fwd[] = {1,0,1,1,0,1,0,1,1};
+    static int start_stop_barcode_bwd[] = {1,1,0,1,0,1,1,0,1};
 
-    
-    for (int i = BARCODE_BUFFER_READ_OFFSET; i < 10; i++){
-        
-        if (barcode_buffer_get(i) != start_stop_barcode_fwd[i - BARCODE_BUFFER_READ_OFFSET]){
-            is_start_stop = 0;
-            break;
+    static int char_A[] =                  {0,1,1,1,1,0,1,1,0};
+
+    bool is_A = 1;
+
+    if (!bm->is_reading){
+        /* To do: Quiet Zone should be used to determine short length*/
+        for (int i = BARCODE_BUFFER_READ_OFFSET; i < 10; i++){
+            
+            if (barcode_buffer_get(i) != start_stop_barcode_fwd[i - BARCODE_BUFFER_READ_OFFSET]){
+                is_start_stop = 0;
+                break;
+            }
+        }
+        if (is_start_stop){
+            printf("\n<BARCODE START>\n\n");
+            barcode_buffer_clear();
+            bm -> is_reading = 1;
         }
     }
-    if (is_start_stop){
-        printf("\n<BARCODE START STOP> * detected!\n\n");
+    else {
+        
+        for (int i = BARCODE_BUFFER_READ_OFFSET; i < 10; i++){
+            if (is_A){
+                if (barcode_buffer_get(i) != char_A[i - BARCODE_BUFFER_READ_OFFSET]){
+                    is_A = 0;
+                    //break;
+                }
+            }
+            if (is_start_stop){
+                if (barcode_buffer_get(i) != start_stop_barcode_fwd[i - BARCODE_BUFFER_READ_OFFSET]){
+                    is_start_stop = 0;
+                    //break;
+                }
+            }
+
+            // If array do not contain A for start/stop for sure, stop checking
+            if (!is_A && !is_start_stop){
+                break;
+            }
+        }
+        if (is_A){
+            printf("\n<BARCODE> Letter A detected\n\n");
+            barcode_buffer_clear();
+        }
+        else if (is_start_stop){
+            printf("\n<BARCODE START>\n\n");
+            barcode_buffer_clear();
+            bm -> is_reading = 0;
+        }
     }
+
 }
 
 void barcode_edge_irq(uint gpio, uint32_t events){
@@ -241,7 +288,7 @@ void barcode_module_init() {
     barcode_isr_data->last_time = 0;
     barcode_isr_data->time_passed = 0;
     barcode_isr_data->high = 0;
-    barcode_module -> barcode_array_index = 0;
+    barcode_module -> is_reading = false;
 
     init_barcode_buffer(barcode_module, BARCODE_BUFFER_SIZE);
 
