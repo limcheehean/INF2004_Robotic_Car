@@ -23,6 +23,7 @@
 
 #define BARCODE_PIN 9
 
+#define BARCODE_BUFFER_SIZE 10
 //#define BARCODE_MODULE_LOCAL
 
 
@@ -31,7 +32,7 @@
 // Data structure to store barcode data collected from ISR
 typedef struct {
     uint64_t last_time; /* Kept solely to determine time_passed */
-    uint16_t time_passed; /* Used to determine pulse width */
+    uint64_t time_passed; /* Used to determine pulse width */
     uint64_t current_time;
 
     // High is white
@@ -39,11 +40,17 @@ typedef struct {
     bool is_short;
 } BarcodeISRData;
 
+typedef struct {
+    int buffer_curr_index;
+    bool array[BARCODE_BUFFER_SIZE];
+} BarcodeBuffer;
+
 typedef struct{
     TaskHandle_t barcode_interpret_task;
     bool barcode_array[10];
     uint16_t barcode_array_index;
     BarcodeISRData barcode_isr_data;
+    BarcodeBuffer barcode_buffer;
 } BarcodeModule;
 
 
@@ -74,23 +81,78 @@ BarcodeISRData * get_barcode_isr_data(){
 }*/
 #endif
 
+void init_barcode_buffer(BarcodeModule * barcode_module, int buffer_size){
+    barcode_module->barcode_buffer.buffer_curr_index = BARCODE_BUFFER_SIZE - 1;
+}
+
+bool barcode_buffer_get(int logical_index){
+    //BarcodeBuffer barcode_buffer = barcode_module->barcode_buffer;
+    BarcodeBuffer * barcode_buffer = & (get_barcode_module() -> barcode_buffer);
+    /***
+     * Barcode buffer is a circular buffer
+     * [1,0,1,0,1]
+     *    ^
+     * Current index: 1
+     * Target logical index: 2
+     * Target actual index: 4
+     * = current index + logical index + 1
+     * [1,0,1,0,1]
+     *        ^
+     * Current index: 4
+     * Target logical index: 3
+     * Target actual index: 2
+     * = (current index + logical index + 1) - ARRAYSIZE - 1
+     * = (8) - 5 - 1 = 2
+     * */ 
+    int index = barcode_buffer->buffer_curr_index + logical_index + 1;
+    if (index >= BARCODE_BUFFER_SIZE){
+        index -= BARCODE_BUFFER_SIZE;
+    }
+    //printf("\n RETURN %d\n", barcode_buffer->array[index]);
+    //printf("Reading at index %d\n", index);
+    return barcode_buffer->array[index];
+}
+
+void barcode_buffer_put(bool data_to_insert){
+
+    BarcodeBuffer * barcode_buffer = & (get_barcode_module() -> barcode_buffer);
+    /***
+     * Barcode buffer is a circular buffer
+     * [1,0,1,0,1]
+     *  ^ current index at 0, has newest value
+     * If I want to insert a new value, 
+     * increment current index and insert at current index
+     * [1,0,1,0,1]
+     *          ^ current index 4, has newest value
+     * To insert when logical array is full,
+     * reset current index to 0 and insert at current index
+     * */ 
+    if (++barcode_buffer->buffer_curr_index >= BARCODE_BUFFER_SIZE){
+        barcode_buffer->buffer_curr_index = 0;
+    } 
+    //printf("Insert at index %d\n", barcode_buffer->buffer_curr_index);
+    barcode_buffer->array[barcode_buffer->buffer_curr_index] = data_to_insert;
+    //printf("\n INSERTED %d \n", barcode_buffer->array[barcode_buffer->buffer_curr_index]);
+
+}
+
 void interpret_barcode(){
     BarcodeModule * bm = get_barcode_module();
     bool past_8[8];
     int index_to_copy = 0;
     bool is_start_stop = 1;
-    int start_stop_barcode[] = {1,0,1,1,0,1,0,1,1};
-    for (int i = 7; i > -1; i--){
-        index_to_copy = bm->barcode_array_index - (7-i);
-        if (index_to_copy < 0) {index_to_copy += 10;}
-        past_8[i] = bm->barcode_array[bm->barcode_array_index]; 
-        if (start_stop_barcode[i] != bm->barcode_array[index_to_copy]){
+    int start_stop_barcode_fwd[] = {1,0,1,1,0,1,0,1,1};
+    int start_stop_barcode_bwd[] = {1,1,0,1,0,1,1,0,1};
+
+    for (int i = 0; i < 10; i++){
+        
+        if (barcode_buffer_get(i) != start_stop_barcode_bwd[i]){
             is_start_stop = 0;
             break;
         }
     }
     if (is_start_stop){
-        printf("<BARCODE START STOP> * detected!\n");
+        printf("\n<BARCODE START STOP> * detected!\n\n");
     }
 }
 
@@ -103,7 +165,7 @@ void barcode_edge_irq(uint gpio, uint32_t events){
 
     if (!(events == (GPIO_IRQ_EDGE_FALL | GPIO_IRQ_EDGE_RISE))){
         BarcodeISRData * barcode_isr_data = &(bm->barcode_isr_data);
-        uint16_t old_time_passed = bm->barcode_isr_data.time_passed;
+        uint64_t old_time_passed = bm->barcode_isr_data.time_passed;
 
         /* Calculate time passed based on last time, and store current time as the new last time */
         barcode_isr_data->time_passed = current_time - barcode_isr_data->last_time;
@@ -129,29 +191,26 @@ void barcode_edge_irq(uint gpio, uint32_t events){
             }
         }
         if (events == GPIO_IRQ_EDGE_RISE){
+            /* Was white line */
             barcode_isr_data->high = false;
             printf("<Barcode> |%d\t | Low\t| %d ms\t|\n",bm->barcode_isr_data.is_short, bm->barcode_isr_data.time_passed);
         }
 
         /* Exited black region */
         else if (events == GPIO_IRQ_EDGE_FALL){
+            /* Was black line */
             barcode_isr_data->high = true;
             printf("<Barcode> |%d\t |High\t| %d ms\t| %2.2f\t|\n",bm->barcode_isr_data.is_short, bm->barcode_isr_data.time_passed);
         }
 
         /* Push barcode length into array. Short - 1; Long - 0;*/
-        bm->barcode_array[bm->barcode_array_index++] = bm->barcode_isr_data.is_short;
+        //bm->barcode_array[bm->barcode_array_index++] = bm->barcode_isr_data.is_short;
+        barcode_buffer_put(bm->barcode_isr_data.is_short);
 
-        /* Circular buffer */
-        if (bm->barcode_array_index > 9) {
-            bm->barcode_array_index = 0;
-        }
         printf("[");
-        int index_to_print = 0;
+        
         for(int loop = 0; loop < 10; loop++){
-            index_to_print = loop + bm->barcode_array_index;
-            if (index_to_print > 9){index_to_print -= 10;}
-            printf("%d ,", bm->barcode_array[index_to_print]);
+            printf("%d,", barcode_buffer_get(loop));
         }
         printf("]\n");
         interpret_barcode();
@@ -182,6 +241,8 @@ void barcode_module_init() {
     barcode_isr_data->time_passed = 0;
     barcode_isr_data->high = 0;
     barcode_module -> barcode_array_index = 0;
+
+    init_barcode_buffer(barcode_module, BARCODE_BUFFER_SIZE);
 
     gpio_set_irq_enabled_with_callback(BARCODE_PIN, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &barcode_edge_irq);
     
