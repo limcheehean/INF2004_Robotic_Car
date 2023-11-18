@@ -26,7 +26,7 @@ pico_add_extra_outputs(robotic_car)
 
 
 add_executable(barcode_driver
-        driver/ir_sensor/barcode_interrupt.c
+        driver/ir_sensor/barcode_driver.c
         #driver/ir_sensor/barcode_isr_data.h
         #driver/ir_sensor/barcode_interpret.c
         #driver/ir_sensor/barcode_buffer.c

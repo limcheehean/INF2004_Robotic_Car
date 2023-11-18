@@ -176,7 +176,7 @@ void barcode_edge_irq(uint gpio, uint32_t events){
     }
 }
 
-void barcode_module_init() {
+void barcode_interrupt_init() {
     // Configure the button pin as an input
     gpio_init(BARCODE_PIN);
     gpio_set_dir(BARCODE_PIN, GPIO_IN);
@@ -248,6 +248,8 @@ void generic_irq(uint gpio, uint32_t events){
  * To do: Add in #ifdef to make sure this main function is created
  * only when certain parameters are set
  */
+
+#ifdef BARCODE_INTERRUPT_TEST
 int main() {
     #include "barcode_interpret.c"
 
@@ -258,22 +260,8 @@ int main() {
     //BarcodeModule bm; /* Create in stack */
     //barcode_class_init(bm); /* Store address in memory */
 
-    barcode_module_init();
+    barcode_interrupt_init();
 
-    // Unit testing init
-    //g_barcode_interpret_queue = xQueueCreate(10, sizeof(BarcodeISRData_t));
-    g_barcode_interpret_queue = xQueueCreate(10, sizeof(BarcodeISRData_t));
-    
-    init_barcode_interpret_task(); 
-    
-//    xTaskCreate(barcode_interpret_task,
-//                 "Barcode Interpret Task",
-//                 configMINIMAL_STACK_SIZE,
-//                 ( void * ) 1, // Can try experimenting with parameter
-//                 tskIDLE_PRIORITY,
-//                 &g_barcode_interpret_task_handle);
-
-    vTaskStartScheduler(); /* NEED THIS */
 
     /* Unit testing */
     float g_shared_dist_buffer = 13212.231;
@@ -286,3 +274,4 @@ int main() {
 
     while (true);
 }
+#endif
