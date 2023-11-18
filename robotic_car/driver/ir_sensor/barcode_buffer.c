@@ -11,7 +11,7 @@ typedef struct {
 } BarcodeBuffer_t;
 
 
-void init_barcode_buffer(BarcodeBuffer_t * barcode_buffer, int buffer_size){
+void init_barcode_buffer(BarcodeBuffer_t * barcode_buffer){
     barcode_buffer -> buffer_curr_index = BARCODE_BUFFER_SIZE - 1;
 }
 

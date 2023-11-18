@@ -15,7 +15,7 @@
  *  - Read barcode
  *  - Read barcode in reverse
  * */
-#include "barcode_buffer.c"
+//#include "barcode_buffer.c"
 #ifndef BARCODE_ISR_DATA_HEADER
     #include "barcode_isr_data.h"
     #define BARCODE_ISR_DATA_HEADER 1
@@ -70,74 +70,8 @@ BarcodeModule * get_barcode_module() {
 }
 #endif
 
-BarcodeBuffer_t * get_barcode_buffer(){
-    static BarcodeBuffer_t barcode_buffer;
-    return &barcode_buffer;
-}
-
 void init_barcode_intr_queue(QueueHandle_t * barcode_interpret_queue){
     g_barcode_interpret_queue =  *barcode_interpret_queue;
-}
-
-void interpret_barcode(){
-    BarcodeModule * bm = get_barcode_module();
-    BarcodeBuffer_t * barcode_buffer = get_barcode_buffer();
-    int index_to_copy = 0;
-    bool is_start_stop = 1;
-    static int start_stop_barcode_fwd[] = {1,0,1,1,0,1,0,1,1};
-    static int start_stop_barcode_bwd[] = {1,1,0,1,0,1,1,0,1};
-
-    static int char_A[] =                  {0,1,1,1,1,0,1,1,0};
-
-    bool is_A = 1;
-
-    if (!bm->is_reading){
-        /* To do: Quiet Zone should be used to determine short length*/
-        for (int i = BARCODE_BUFFER_READ_OFFSET; i < 10; i++){
-            
-            if (barcode_buffer_get(barcode_buffer, i) != start_stop_barcode_fwd[i - BARCODE_BUFFER_READ_OFFSET]){
-                is_start_stop = 0;
-                break;
-            }
-        }
-        if (is_start_stop){
-            printf("\n<BARCODE START>\n\n");
-            barcode_buffer_clear(barcode_buffer);
-            bm -> is_reading = 1;
-        }
-    }
-    else {
-        
-        for (int i = BARCODE_BUFFER_READ_OFFSET; i < 10; i++){
-            if (is_A){
-                if (barcode_buffer_get(barcode_buffer, i) != char_A[i - BARCODE_BUFFER_READ_OFFSET]){
-                    is_A = 0;
-                    //break;
-                }
-            }
-            if (is_start_stop){
-                if (barcode_buffer_get(barcode_buffer, i) != start_stop_barcode_fwd[i - BARCODE_BUFFER_READ_OFFSET]){
-                    is_start_stop = 0;
-                    //break;
-                }
-            }
-
-            // If array do not contain A for start/stop for sure, stop checking
-            if (!is_A && !is_start_stop){
-                break;
-            }
-        }
-        if (is_A){
-            printf("\n<BARCODE> Letter A detected\n\n");
-            barcode_buffer_clear(barcode_buffer);
-        }
-        else if (is_start_stop){
-            printf("\n<BARCODE START>\n\n");
-            barcode_buffer_clear(barcode_buffer);
-            bm -> is_reading = 0;
-        }
-    }
-
 }
 
 void barcode_edge_irq(uint gpio, uint32_t events){
@@ -156,15 +90,16 @@ void barcode_edge_irq(uint gpio, uint32_t events){
     if (!(events == (GPIO_IRQ_EDGE_FALL | GPIO_IRQ_EDGE_RISE))){
         //taskENTER_CRITICAL_FROM_ISR();
         BarcodeISRData_t * barcode_isr_data = &(bm->barcode_isr_data);
-        BarcodeBuffer_t * barcode_buffer = get_barcode_buffer();
-        uint64_t old_time_passed = bm->barcode_isr_data.time_passed;
+        //BarcodeBuffer_t * barcode_buffer = get_barcode_buffer();
+        //uint64_t old_time_passed = bm->barcode_isr_data.time_passed;
 
         /* Calculate time passed based on last time, and store current time as the new last time */
-        barcode_isr_data->time_passed = current_time - barcode_isr_data->last_time;
-        barcode_isr_data->last_time = current_time;
+        barcode_isr_data->time_passed = current_time - barcode_isr_data->current_time;
+        //barcode_isr_data->last_time = current_time;
         barcode_isr_data->current_time = current_time;
 
         /* Record down high or low */
+        /*
         if (old_time_passed == 0) {printf("<Barcode length is an estimate for now!>\n");}
         if (old_time_passed > barcode_isr_data->time_passed * 2){
                 //printf("<Barcode length>\tShort\n");
@@ -181,30 +116,32 @@ void barcode_edge_irq(uint gpio, uint32_t events){
             else{
                 //printf("<Barcode length>\tLong\n");
             }
-        }
+        }*/
         if (events == GPIO_IRQ_EDGE_RISE){
             /* Was white line */
             barcode_isr_data->high = false;
-            printf("<Barcode> |%d\t | Low\t| %d ms\t|\n",bm->barcode_isr_data.is_short, bm->barcode_isr_data.time_passed);
+            //printf("<Barcode> |%d\t | Low\t| %d ms\t|\n",bm->barcode_isr_data.is_short, bm->barcode_isr_data.time_passed);
         }
+    
 
         /* Exited black region */
         else if (events == GPIO_IRQ_EDGE_FALL){
             /* Was black line */
             barcode_isr_data->high = true;
-            printf("<Barcode> |%d\t |High\t| %d ms\t| %2.2f\t|\n",bm->barcode_isr_data.is_short, bm->barcode_isr_data.time_passed);
+            //printf("<Barcode> |%d\t |High\t| %d ms\t| %2.2f\t|\n",bm->barcode_isr_data.is_short, bm->barcode_isr_data.time_passed);
         }
 
         /* Push barcode length into array. Short - 1; Long - 0;*/
         //bm->barcode_array[bm->barcode_array_index++] = bm->barcode_isr_data.is_short;
-        barcode_buffer_put(barcode_buffer, bm->barcode_isr_data.is_short);
-
+        //barcode_buffer_put(barcode_buffer, bm->barcode_isr_data.is_short);
+        /*
         printf("[");
         
         for(int loop = 0; loop < 10; loop++){
             printf("%d,", barcode_buffer_get(barcode_buffer, loop));
         }
         printf("]\n");
+        */
 
         // Send to queue, overwrite if full 
         //printf("Send success!\n");
@@ -212,8 +149,8 @@ void barcode_edge_irq(uint gpio, uint32_t events){
         //interpret_barcode();
 
         BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-        if (xQueueSendFromISR(g_barcode_interpret_queue, &bm->barcode_isr_data /*barcode_isr_data*/, &xHigherPriorityTaskWoken)){
-            printf("Send success\n");
+        if (!xQueueSendFromISR(g_barcode_interpret_queue, &bm->barcode_isr_data /*barcode_isr_data*/, &xHigherPriorityTaskWoken)){
+            //printf("\n\nBuffer full\n\n");
         };
         //taskEXIT_CRITICAL_FROM_ISR(xHigherPriorityTaskWoken);
         //portYIELD_FROM_ISR(xHigherPriorityTaskWoken); //Doesnt fix freezing bug
@@ -235,7 +172,7 @@ void barcode_edge_irq(uint gpio, uint32_t events){
      * */
     else {
         //printf("<Barcode> Edge rise and fall detected simultaneously\n");
-        printf("R&F\n");
+        //printf("R&F\n");
     }
 }
 
@@ -246,14 +183,14 @@ void barcode_module_init() {
     gpio_pull_down(BARCODE_PIN); // Use pull-down resistor
     
     BarcodeModule * barcode_module = get_barcode_module();
-    BarcodeBuffer_t * barcode_buffer = get_barcode_buffer();
+    //BarcodeBuffer_t * barcode_buffer = get_barcode_buffer();
     BarcodeISRData_t * barcode_isr_data = &(barcode_module->barcode_isr_data);
-    barcode_isr_data->last_time = 0;
+    barcode_isr_data->current_time = 0;
     barcode_isr_data->time_passed = 0;
     barcode_isr_data->high = 0;
     barcode_module -> is_reading = false;
 
-    init_barcode_buffer(barcode_buffer, BARCODE_BUFFER_SIZE);
+    //init_barcode_buffer(barcode_buffer, BARCODE_BUFFER_SIZE);
 
     gpio_set_irq_enabled_with_callback(BARCODE_PIN, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &barcode_edge_irq);
     
@@ -281,19 +218,19 @@ void dist_increm_irq(uint gpio, uint32_t events){
     float g_shared_dist_buffer = 1;
     //g_shared_dist_buffer += 1;
     float a = (float)g_shared_dist_buffer / 40 * 33.2f;
-    float b = 33.2f / 40 / ((float)(current_time - get_barcode_module()->barcode_isr_data.last_time) / 1000000.0f);
+    float b = 33.2f / 40 / ((float)(current_time - get_barcode_module()->barcode_isr_data.current_time) / 1000000.0f);
     current_time = current_time;
 
     current_time = time_us_64();
     //g_shared_dist_buffer -= 1;
     a = (float)g_shared_dist_buffer / 40 * 33.2f;
-    b = 33.2f / 40 / ((float)(current_time - get_barcode_module()->barcode_isr_data.last_time) / 1000000.0f);
+    b = 33.2f / 40 / ((float)(current_time - get_barcode_module()->barcode_isr_data.current_time) / 1000000.0f);
     current_time = current_time;
 
     current_time = time_us_64();
     //g_shared_dist_buffer += 1;
     a = (float)g_shared_dist_buffer / 40 * 33.2f;
-    b = 33.2f / 40 / ((float)(current_time - get_barcode_module()->barcode_isr_data.last_time) / 1000000.0f);
+    b = 33.2f / 40 / ((float)(current_time - get_barcode_module()->barcode_isr_data.current_time) / 1000000.0f);
     current_time = current_time;
 }
 

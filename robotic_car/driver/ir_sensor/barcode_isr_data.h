@@ -5,7 +5,7 @@
 
 /* Used for communication between Interrupt and Task */
 typedef struct {
-    uint64_t last_time; /* Kept solely to determine time_passed */
+    //uint64_t last_time; /* Kept solely to determine time_passed */
     uint64_t time_passed; /* Used to determine pulse width */
     uint64_t current_time;
 
