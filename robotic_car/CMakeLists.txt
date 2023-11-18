@@ -7,6 +7,7 @@ add_executable(robotic_car
 
 target_include_directories(robotic_car PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
+        ${CMAKE_CURRENT_LIST_DIR}/../..
         )
 
 target_link_libraries(robotic_car
@@ -25,10 +26,14 @@ pico_add_extra_outputs(robotic_car)
 
 
 add_executable(barcode_driver
-        driver/ir_sensor/barcode.c
+        driver/ir_sensor/barcode_interrupt.c
+        #driver/ir_sensor/barcode_isr_data.h
+        #driver/ir_sensor/barcode_interpret.c
+        #driver/ir_sensor/barcode_buffer.c
 )
 target_include_directories(barcode_driver PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
+        ${CMAKE_CURRENT_LIST_DIR}/../..
         )
 target_link_libraries(barcode_driver
         pico_stdlib
@@ -39,6 +44,7 @@ pico_enable_stdio_usb(barcode_driver 1)
 pico_enable_stdio_uart(barcode_driver 0)
 
 pico_add_extra_outputs(barcode_driver)
+
 
 #Wifi
 
