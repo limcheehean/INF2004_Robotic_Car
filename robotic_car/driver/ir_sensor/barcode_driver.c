@@ -10,7 +10,6 @@ void barcode_driver_init(){
 }
 
 int main() {
-    #include "barcode_interpret.c"
 
     stdio_init_all();
 

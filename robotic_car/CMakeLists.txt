@@ -3,6 +3,9 @@ add_executable(robotic_car
         driver/motor/motor_controller.h
         driver/encoder/wheel_encoder.h
         test/motor_test.h
+
+        # Barcode related modules
+        driver/ir_sensor/barcode_driver.c
         )
 
 target_include_directories(robotic_car PRIVATE
@@ -16,6 +19,7 @@ target_link_libraries(robotic_car
         pico_stdlib
         hardware_adc
         hardware_pwm
+        FreeRTOS-Kernel-Heap4 # FreeRTOS kernel and dynamic heap
         )
 
 pico_enable_stdio_usb(robotic_car 1)
@@ -27,9 +31,9 @@ pico_add_extra_outputs(robotic_car)
 
 add_executable(barcode_driver
         driver/ir_sensor/barcode_driver.c
-        #driver/ir_sensor/barcode_isr_data.h
-        #driver/ir_sensor/barcode_interpret.c
-        #driver/ir_sensor/barcode_buffer.c
+        driver/ir_sensor/barcode_isr_data.h
+        driver/ir_sensor/barcode_interpret.c
+        driver/ir_sensor/barcode_buffer.c
 )
 target_include_directories(barcode_driver PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
@@ -64,6 +68,8 @@ execute_process(COMMAND
 
 add_executable(pico_w_webserver
     driver/wifi/main.c
+    driver/wifi/wifi_task_message_buffer.h
+    driver/wifi/wifi_task_message_receiver.c
 )
 
 target_include_directories(pico_w_webserver PRIVATE
@@ -76,6 +82,7 @@ target_link_libraries(pico_w_webserver
     pico_stdlib
     hardware_adc
     hardware_pwm
+    FreeRTOS-Kernel-Heap4 # FreeRTOS kernel and dynamic heap
 )
 
 pico_enable_stdio_usb(pico_w_webserver TRUE)

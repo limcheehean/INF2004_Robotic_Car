@@ -1,9 +1,30 @@
+/***
+ * Barcode interpret subcomponent
+ * 
+ * Receives BarcodeISRData_t items from FreeRTOS Queue (sent by barcode_interrupt).
+ * 
+ * Studies the received values to make sense of which lines are short or longer
+ * then interpret the barcode values
+ * 
+ * */
+
+
 #ifndef BARCODE_ISR_DATA_HEADER
     #include "barcode_isr_data.h"
     #define BARCODE_ISR_DATA_HEADER 1
 #endif
+#include "FreeRTOS.h"
 #include "task.h"
 #include "barcode_buffer.c"
+
+/**
+ * For personal reference:
+ * taskENTER_CRITICAL();
+ * taskEXIT_CRITICAL();
+ * 
+ * */
+
+
 
 TaskHandle_t g_barcode_interpret_task_handle;
 
