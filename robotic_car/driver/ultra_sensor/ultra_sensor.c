@@ -14,8 +14,8 @@ volatile uint32_t start_time = 0;
 volatile uint32_t end_time = 0;
 
 // Kalman Filter variables
-float x_hat = 0.0;  // Estimated state (distance)
-float P = 1.0;      // Estimated error covariance
+float x_hat = 0.0;  // Estimated best guess of the distance (distance)
+float P = 1.0;      // Estimated error covariance (how certain I am about the guess)
 float Q = 0.1;      // Process noise covariance
 float R = 0.1;      // Measurement noise covariance
 
@@ -53,10 +53,11 @@ void echo_pin_isr(uint gpio, uint32_t events) {
             //end timer
             end_time = time_us_32();
             uint32_t pulse_duration = end_time - start_time;
+
             // Convert pulse duration to distance in centimeters /29/2
             float distance_cm = pulse_duration / 58; 
 
-            // Update Kalman Filter with the raw distance measurement
+            // Use Kalman Filter with the raw distance measurement
             kalmanFilter(distance_cm);
 
             // Use the filtered distance for further processing by putting into a circular buffer
@@ -65,6 +66,7 @@ void echo_pin_isr(uint gpio, uint32_t events) {
             // Store the distance reading in the circular buffer
             distance_readings[current_reading] = filtered_distance;
             current_reading = (current_reading + 1) % NUM_READINGS;
+
             // Calculate the average for better reading
             float sum = 0;
             for (int i = 0; i < NUM_READINGS; i++) {
@@ -72,6 +74,7 @@ void echo_pin_isr(uint gpio, uint32_t events) {
             }
             float moving_average = sum / NUM_READINGS;
 
+            //if else to print distance. Can use this to move vehicle back.
             if (moving_average >= MAX_DISTANCE_CM ) {
                 printf("\n Too Far!! Distance >%d cm", MAX_DISTANCE_CM);
             }
@@ -103,6 +106,6 @@ int main()
         gpio_put(trigPin, 1);  // Set the trigger pin high
         sleep_us(100);          // Keep it high for at least 10 microseconds
         gpio_put(trigPin, 0);  // Set the trigger pin low
-        sleep_ms(150); //sleep
+        sleep_us(150000); //sleep
     }
 }
