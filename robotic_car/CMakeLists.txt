@@ -113,3 +113,15 @@ pico_enable_stdio_usb(magnetnometer_driver 1)
 pico_enable_stdio_uart(magnetnometer_driver 0)
 
 pico_add_extra_outputs(magnetnometer_driver)
+
+#ultrasonic sensor
+add_executable(ultrasonic_sensor_driver driver/ultra_sensor/ultra_sensor.c)
+
+target_link_libraries(ultrasonic_sensor_driver pico_stdlib hardware_uart hardware_timer)
+
+pico_enable_stdio_usb(ultrasonic_sensor_driver 1)
+pico_enable_stdio_uart(ultrasonic_sensor_driver 0)
+
+pico_add_extra_outputs(ultrasonic_sensor_driver)
+
+example_auto_set_url(ultrasonic_sensor_driver)
