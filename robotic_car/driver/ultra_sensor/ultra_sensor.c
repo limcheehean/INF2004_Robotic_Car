@@ -50,13 +50,13 @@ void echo_pin_isr(uint gpio, uint32_t events) {
             float moving_average = sum / NUM_READINGS;
 
             if (moving_average >= MAX_DISTANCE_CM ) {
-                printf("\n Too Far!! Distance > 100 cm");
+                printf("\n Too Far!! Distance >%d cm", MAX_DISTANCE_CM);
             }
             else if (moving_average <= MIN_DISTANCE_CM) {
-                printf("\n Too Near!! Distance <3 cm");
+                printf("\n Too Near!! Distance < %d cm", MIN_DISTANCE_CM);
             }
             else {
-                printf("\n current distance: %f cm", moving_average);
+                printf("\n current distance: %.2f cm", moving_average);
             }
         }
     }
