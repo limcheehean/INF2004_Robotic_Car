@@ -13,12 +13,30 @@ uint echoPin = 1;
 volatile uint32_t start_time = 0;
 volatile uint32_t end_time = 0;
 
+// Kalman Filter variables
+float x_hat = 0.0;  // Estimated state (distance)
+float P = 1.0;      // Estimated error covariance
+float Q = 0.1;      // Process noise covariance
+float R = 0.1;      // Measurement noise covariance
+
 void setupUltrasonicPins(uint trigPin, uint echoPin)
 {
     gpio_init(trigPin);
     gpio_init(echoPin);
     gpio_set_dir(trigPin, GPIO_OUT);
     gpio_set_dir(echoPin, GPIO_IN);
+}
+
+// Kalman Filter update function from online
+void kalmanFilter(float z) {
+    // Time update (prediction)
+    float x_hat_minus = x_hat;
+    float P_minus = P + Q;
+
+    // Measurement update (correction)
+    float K = P_minus / (P_minus + R);
+    x_hat = x_hat_minus + K * (z - x_hat_minus);
+    P = (1 - K) * P_minus;
 }
 
 
@@ -35,12 +53,17 @@ void echo_pin_isr(uint gpio, uint32_t events) {
             //end timer
             end_time = time_us_32();
             uint32_t pulse_duration = end_time - start_time;
-            pulse_duration *= 1000;
             // Convert pulse duration to distance in centimeters /29/2
-            float distance_cm = pulse_duration / 58 / 1000; 
+            float distance_cm = pulse_duration / 58; 
+
+            // Update Kalman Filter with the raw distance measurement
+            kalmanFilter(distance_cm);
+
+            // Use the filtered distance for further processing by putting into a circular buffer
+            float filtered_distance = x_hat;
             
             // Store the distance reading in the circular buffer
-            distance_readings[current_reading] = distance_cm;
+            distance_readings[current_reading] = filtered_distance;
             current_reading = (current_reading + 1) % NUM_READINGS;
             // Calculate the average for better reading
             float sum = 0;
@@ -80,6 +103,6 @@ int main()
         gpio_put(trigPin, 1);  // Set the trigger pin high
         sleep_us(100);          // Keep it high for at least 10 microseconds
         gpio_put(trigPin, 0);  // Set the trigger pin low
-        sleep_ms(100); //sleep
+        sleep_ms(150); //sleep
     }
 }
