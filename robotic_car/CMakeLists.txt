@@ -10,7 +10,7 @@ add_executable(robotic_car
 
 target_include_directories(robotic_car PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
-        ${CMAKE_CURRENT_LIST_DIR}/../..
+#        ${CMAKE_CURRENT_LIST_DIR}/../..
         ${CMAKE_CURRENT_LIST_DIR}/driver/ir_sensor/barcode_subcomponents/
         )
 
