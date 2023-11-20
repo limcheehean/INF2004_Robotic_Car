@@ -37,9 +37,18 @@ void study_interrupt_value(
     BarcodeISRData_t * old_barcode_isr_data_buffer,
     BarcodeISRData_t * barcode_isr_data_buffer){
 
-    uint64_t old_time_passed = old_barcode_isr_data_buffer -> time_passed;
-    uint64_t curr_time_passed = barcode_isr_data_buffer -> time_passed;
-    if (old_time_passed == 0) {
+    struct wheel_encoder_data * w_data = get_encoder_data();
+
+    //uint64_t old_time_passed = old_barcode_isr_data_buffer -> time_passed;
+    //uint64_t curr_time_passed = barcode_isr_data_buffer -> time_passed;
+
+    //int offset_sign = 1; 
+    
+    float old_length = (old_barcode_isr_data_buffer -> time_passed - old_barcode_isr_data_buffer -> wheel_encoder_time) 
+                        * old_barcode_isr_data_buffer -> wheel_encoder_speed;
+    float new_length = (barcode_isr_data_buffer -> time_passed - barcode_isr_data_buffer -> wheel_encoder_time) 
+                        * barcode_isr_data_buffer -> wheel_encoder_speed;
+    if (old_length == 0) {
         /* Very likely, car won't move at the start, so the next barcode will have a very long duration
             Hence, next barcode length will be long.
             There should be a lot of white space before start of barcode, so that is guaranteed long as well.
@@ -47,11 +56,12 @@ void study_interrupt_value(
         */
         printf("<Barcode length is an estimate for now!>\n");
     }
-    if (old_time_passed > curr_time_passed * 2){
+    //if (old_time_passed > curr_time_passed * 2){
+        if (old_length > new_length * 2){
             //printf("<Barcode length>\tShort\n");
             barcode_isr_data_buffer->is_short = 1;
         }
-    else if (old_time_passed * 2 < curr_time_passed){
+    else if (old_length * 2 < new_length){
             //printf("<Barcode length>\tLong\n");
             barcode_isr_data_buffer->is_short = 0;
         }
