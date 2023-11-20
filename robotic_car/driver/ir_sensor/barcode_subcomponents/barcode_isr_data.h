@@ -19,6 +19,8 @@ Nice-to-haves;
 typedef struct {
     //uint64_t last_time; /* Kept solely to determine time_passed */
     uint64_t time_passed; /* Used to determine pulse width */
+    float wheel_encoder_speed;
+    float wheel_encoder_time;
     uint64_t current_time;
 
     // High is white

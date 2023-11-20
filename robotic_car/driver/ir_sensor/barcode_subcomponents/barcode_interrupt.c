@@ -24,6 +24,9 @@
 #include "queue.h"
 #include "task.h"
 
+#include "../../encoder/wheel_encoder.h"
+
+
 #define BARCODE_PIN 9
 
 #define BARCODE_BUFFER_SIZE 10
@@ -98,25 +101,6 @@ void barcode_edge_irq(uint gpio, uint32_t events){
         //barcode_isr_data->last_time = current_time;
         barcode_isr_data->current_time = current_time;
 
-        /* Record down high or low */
-        /*
-        if (old_time_passed == 0) {printf("<Barcode length is an estimate for now!>\n");}
-        if (old_time_passed > barcode_isr_data->time_passed * 2){
-                //printf("<Barcode length>\tShort\n");
-                barcode_isr_data->is_short = 1;
-            }
-        else if (old_time_passed * 2 < barcode_isr_data->time_passed){
-                //printf("<Barcode length>\tLong\n");
-                barcode_isr_data->is_short = 0;
-            }
-        else {
-            if (barcode_isr_data->is_short){
-                //printf("<Barcode length>\tShort\n");
-            }
-            else{
-                //printf("<Barcode length>\tLong\n");
-            }
-        }*/
         if (events == GPIO_IRQ_EDGE_RISE){
             /* Was white line */
             barcode_isr_data->high = false;
@@ -131,35 +115,14 @@ void barcode_edge_irq(uint gpio, uint32_t events){
             //printf("<Barcode> |%d\t |High\t| %d ms\t| %2.2f\t|\n",bm->barcode_isr_data.is_short, bm->barcode_isr_data.time_passed);
         }
 
-        /* Push barcode length into array. Short - 1; Long - 0;*/
-        //bm->barcode_array[bm->barcode_array_index++] = bm->barcode_isr_data.is_short;
-        //barcode_buffer_put(barcode_buffer, bm->barcode_isr_data.is_short);
-        /*
-        printf("[");
-        
-        for(int loop = 0; loop < 10; loop++){
-            printf("%d,", barcode_buffer_get(barcode_buffer, loop));
-        }
-        printf("]\n");
-        */
-
-        // Send to queue, overwrite if full 
-        //printf("Send success!\n");
-        
         //interpret_barcode();
-
+        barcode_isr_data -> wheel_encoder_speed = get_encoder_data()->left_encoder.current_speed;
+        barcode_isr_data -> wheel_encoder_time = get_encoder_data()->left_encoder.last_time;
         BaseType_t xHigherPriorityTaskWoken = pdFALSE;
         if (!xQueueSendFromISR(g_barcode_interpret_queue, &bm->barcode_isr_data /*barcode_isr_data*/, &xHigherPriorityTaskWoken)){
             //printf("\n\nBuffer full\n\n");
         };
-        //taskEXIT_CRITICAL_FROM_ISR(xHigherPriorityTaskWoken);
-        //portYIELD_FROM_ISR(xHigherPriorityTaskWoken); //Doesnt fix freezing bug
 
-
-        //printf("Task woken\n");
-        /* Actual macro used here is port specific. */
-        //portYIELD_FROM_ISR (0);
-        //portEND_SWITCHING_ISR(1);
         
         
     }

@@ -15,7 +15,9 @@ int main() {
     stdio_init_all();
 
     /* Declare in main function */
+    get_encoder_data() -> left_encoder.current_speed = 1;
 
+    get_encoder_data() -> left_encoder.last_time = 0;
     barcode_driver_init();
 
     vTaskStartScheduler(); /* NEED THIS */
