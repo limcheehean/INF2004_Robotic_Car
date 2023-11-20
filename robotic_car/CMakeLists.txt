@@ -5,7 +5,7 @@ add_executable(robotic_car
         test/motor_test.h
 
         # Barcode related modules
-        driver/ir_sensor/barcode_driver.c
+        #driver/ir_sensor/barcode_driver.c
         )
 
 target_include_directories(robotic_car PRIVATE

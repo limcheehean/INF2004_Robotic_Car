@@ -24,7 +24,9 @@
 #include "queue.h"
 #include "task.h"
 
+#ifndef INCLUDE_WHEEL_ENCODER
 #include "../../encoder/wheel_encoder.h"
+#endif
 
 
 #define BARCODE_PIN 9

@@ -66,6 +66,6 @@ void test_motor() {
     httpd_init();
     cgi_init();
 
-    while (true);
+    //while (true);
 
 }
