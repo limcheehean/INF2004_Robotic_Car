@@ -11,6 +11,7 @@ add_executable(robotic_car
 target_include_directories(robotic_car PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
         ${CMAKE_CURRENT_LIST_DIR}/../..
+        ${CMAKE_CURRENT_LIST_DIR}/driver/ir_sensor/barcode_subcomponents/
         )
 
 target_link_libraries(robotic_car
@@ -31,18 +32,22 @@ pico_add_extra_outputs(robotic_car)
 
 add_executable(barcode_driver
         driver/ir_sensor/barcode_driver.c
-        driver/ir_sensor/barcode_isr_data.h
-        driver/ir_sensor/barcode_interpret.c
-        driver/ir_sensor/barcode_buffer.c
+        #driver/ir_sensor/barcode_isr_data.h
+        #driver/ir_sensor/barcode_interpret.c
+        #driver/ir_sensor/barcode_buffer.c
 )
 target_include_directories(barcode_driver PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
-        ${CMAKE_CURRENT_LIST_DIR}/../..
+        ${CMAKE_CURRENT_LIST_DIR}/driver/ir_sensor/barcode_subcomponents/
         )
 target_link_libraries(barcode_driver
         pico_stdlib
         FreeRTOS-Kernel-Heap4 # FreeRTOS kernel and dynamic heap
         )
+
+target_compile_definitions(barcode_driver PRIVATE
+        BARCODE_UNIT_TEST# = 1
+)
 
 pico_enable_stdio_usb(barcode_driver 1)
 pico_enable_stdio_uart(barcode_driver 0)
@@ -68,7 +73,7 @@ execute_process(COMMAND
 
 add_executable(pico_w_webserver
     driver/wifi/main.c
-    driver/wifi/wifi_task_message_buffer.h
+    #driver/wifi/wifi_task_message_buffer.h
     driver/wifi/wifi_task_message_receiver.c
 )
 

@@ -9,6 +9,7 @@ void barcode_driver_init(){
     
 }
 
+#ifdef BARCODE_UNIT_TEST
 int main() {
 
     stdio_init_all();
@@ -30,3 +31,4 @@ int main() {
 
     while (true);
 }
+#endif
