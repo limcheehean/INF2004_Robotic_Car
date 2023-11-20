@@ -8,7 +8,10 @@
 // WIFI Credentials - take care if pushing to github!
 const char WIFI_SSID[] = "S20";
 const char WIFI_PASSWORD[] = "reness10";
+// 2201427@sit.singaporetech.edu.sg
+// Kanagarani2!
 // S20,reness10
+//ravirani, kanagarani18
 int main()
 {
     stdio_init_all();

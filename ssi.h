@@ -1,9 +1,10 @@
+//temp_ssi.h
 #include "lwip/apps/httpd.h"
 #include "pico/cyw43_arch.h"
 #include "hardware/adc.h"
 
 // SSI tags - tag length limited to 8 bytes by default
-const char * ssi_tags[] = {"volt","temp","led"};
+const char * ssi_tags[] = {"volt","temp","led", "message"};
 
 u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen) {
   size_t printed;
@@ -30,6 +31,12 @@ u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen) {
       else{
         printed = snprintf(pcInsert, iInsertLen, "OFF");
       }
+    }
+    break;
+  case 3:
+    {
+      const int checkValue = 42;
+      printed = snprintf(pcInsert, iInsertLen, "%d", checkValue);
     }
     break;
   default:
