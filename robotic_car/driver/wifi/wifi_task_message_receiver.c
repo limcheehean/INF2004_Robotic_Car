@@ -1,11 +1,8 @@
 
 #include "FreeRTOS.h"
 #include "task.h"
-#ifndef WIFI_TASK_MESSAGE_HEADER
-    #include "wifi_task_message_buffer.h"
-    #define WIFI_TASK_MESSAGE_HEADER 1
-#endif
-#include "robotic_car/driver/ir_sensor/barcode_subcomponents/barcode_isr_data.h"
+#include "wifi_task_message_buffer.h"
+
 
 TaskHandle_t g_wifi_task_message_task_handle;
 WifiTaskMessage_t currentMessage;
@@ -34,12 +31,12 @@ void wifi_task_message_receive_task( void *pvParameters ) {
         vTaskDelete(NULL); 
     }
 
-void init_barcode_intr_queue(QueueHandle_t * wifi_task_message_queue){
+void init_wifi_intr_queue(QueueHandle_t * wifi_task_message_queue){
     g_wifi_task_message_queue =  *wifi_task_message_queue;
 }
 
 void init_wifi_task_message_receive(){
-    init_barcode_buffer(get_barcode_buffer());
+    //init_barcode_buffer(get_barcode_buffer());
     xTaskCreate(wifi_task_message_receive_task,
                 "Barcode Interpret Task",
                 configMINIMAL_STACK_SIZE,

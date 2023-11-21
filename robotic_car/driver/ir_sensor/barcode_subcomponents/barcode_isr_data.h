@@ -1,3 +1,5 @@
+#ifndef BARCODE_ISR_DATA_H_
+#define BARCODE_ISR_DATA_H_
 #include "pico/stdlib.h"
 #include "FreeRTOS.h"
 #include <stdio.h>
@@ -29,18 +31,11 @@ typedef struct {
     bool is_short;
 } BarcodeISRData_t;
 
-QueueHandle_t g_barcode_interpret_queue;
-
 typedef struct {
     int buffer_curr_index;
     bool array[BARCODE_BUFFER_SIZE];
 } BarcodeBuffer_t;
 
-#ifndef BARCODE_MODULE_H
-#define BARCODE_MODULE_H
-
 extern QueueHandle_t g_barcode_interpret_queue;
-extern void init_barcode_buffer(BarcodeBuffer_t * barcode_buffer);
-extern void *get_barcode_buffer(void);
 
-#endif  // BARCODE_MODULE_H
+#endif  // BARCODE_ISR_DATA_H_

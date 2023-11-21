@@ -1,6 +1,11 @@
 #ifndef BARCODE_INTERPRET_
 #define BARCODE_INTERPRET_
 
+#include "wifi_task_message_buffer.h"
+#include "FreeRTOS.h"
+#include <stdio.h>
+#include "queue.h"
+
 #ifndef BARCODE_BUFFER_SIZE 
 #define BARCODE_BUFFER_SIZE 9
 #endif

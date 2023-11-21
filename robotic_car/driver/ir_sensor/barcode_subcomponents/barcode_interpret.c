@@ -23,6 +23,8 @@ TaskHandle_t g_barcode_interpret_task_handle;
 
 uint16_t g_barcode_buffer = 0x0;
 
+QueueHandle_t g_barcode_interpret_queue;
+
 uint16_t reverse_binary(uint16_t value, int size){
 
     uint16_t reversed_value = 0;
@@ -204,6 +206,8 @@ void interpret_barcode( uint16_t barcode_buffer, bool * next_is_quiet, bool * re
         }
     
         if (is_start_stop){
+            char message = '*';
+            xQueueSendFromISR(g_wifi_task_message_queue, &message, 0); 
             #ifndef NOT_DEBUGGING
             printf("\n<BARCODE START>\n\n");
             #endif
@@ -223,6 +227,8 @@ void interpret_barcode( uint16_t barcode_buffer, bool * next_is_quiet, bool * re
             barcode_buffer = reverse_binary(barcode_buffer, BARCODE_BUFFER_SIZE);
         } 
         if ((barcode_buffer & BC_START_STOP) == BC_START_STOP){
+            char message = '*';
+            xQueueSendFromISR(g_wifi_task_message_queue, &message, 0); 
             #ifndef NOT_DEBUGGING
             printf("\n<BARCODE STOP>\n\n");
             #endif
@@ -238,7 +244,7 @@ void interpret_barcode( uint16_t barcode_buffer, bool * next_is_quiet, bool * re
             /* Check through all characters */
             char c = get_barcode_char(barcode_buffer);
             if (c != ' '){
-
+                xQueueSendFromISR(g_wifi_task_message_queue, &c, 0); 
                 #ifndef NOT_DEBUGGING
                 printf(" \n READ %c\n",c);
                 #endif

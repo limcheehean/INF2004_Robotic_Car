@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include "queue.h"
 #include "semphr.h"
+#include "../ir_sensor/barcode_subcomponents/barcode_isr_data.h"
 
 #define WIFI_TASK_MESSAGE_SIZE 30
 

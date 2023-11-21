@@ -31,6 +31,8 @@ pico_add_extra_outputs(robotic_car)
 
 
 add_executable(barcode_driver
+        #driver/wifi/main.c
+        driver/wifi/wifi_task_message_receiver.c
         driver/ir_sensor/barcode_driver.c
         #driver/ir_sensor/barcode_isr_data.h
         #driver/ir_sensor/barcode_interpret.c
@@ -39,10 +41,16 @@ add_executable(barcode_driver
 target_include_directories(barcode_driver PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
         ${CMAKE_CURRENT_LIST_DIR}/driver/ir_sensor/barcode_subcomponents/
+        ${CMAKE_CURRENT_LIST_DIR}/driver/wifi
         )
 target_link_libraries(barcode_driver
+        pico_cyw43_arch_lwip_threadsafe_background
         pico_stdlib
-        FreeRTOS-Kernel-Heap4 # FreeRTOS kernel and dynamic heap
+        pico_lwip_iperf
+        FreeRTOS-Kernel-Heap4 
+        pico_lwip_http
+        pico_lwip_iperf
+        hardware_adc
         )
 
 target_compile_definitions(barcode_driver PRIVATE
@@ -104,3 +112,51 @@ pico_enable_stdio_usb(wall_interrupt 1)
 pico_enable_stdio_uart(wall_interrupt 0)
 
 pico_add_extra_outputs(wall_interrupt)
+
+
+
+#Wifi
+
+message("Running makefsdata python script")
+execute_process(COMMAND
+    py makefsdata.py
+    WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/makefsdata.py
+)
+
+add_executable(pico_w_webserver1
+        driver/wifi/main.c
+        driver/wifi/wifi_task_message_receiver.c
+)
+
+#target_compile_definitions(pico_w_webserver1 PRIVATE
+#        NO_SYS=0            # don't want NO_SYS (generally this would be in your lwipopts.h)
+#        LWIP_SOCKET=1       # we need the socket API (generally this would be in your lwipopts.h)
+#        LWIP_TIMEVAL_PRIVATE=0
+#        )
+
+target_include_directories(pico_w_webserver1 PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR}
+    ${CMAKE_CURRENT_LIST_DIR}/driver/wifi
+#    ${CMAKE_CURRENT_LIST_DIR}/../..
+    #${CMAKE_CURRENT_LIST_DIR}/robotic_car/driver/ir_sensor/barcode_subcomponents  # Add this line
+
+)
+
+target_link_libraries(pico_w_webserver1
+    pico_cyw43_arch_lwip_threadsafe_background
+    pico_stdlib
+    pico_lwip_iperf
+    FreeRTOS-Kernel-Heap4 
+    pico_lwip_http
+    pico_lwip_iperf
+    hardware_adc
+)
+
+target_compile_definitions(pico_w_webserver1 PRIVATE
+        
+        )
+
+pico_enable_stdio_usb(pico_w_webserver1 TRUE)
+pico_enable_stdio_uart(pico_w_webserver1 FALSE)
+
+pico_add_extra_outputs(pico_w_webserver1)

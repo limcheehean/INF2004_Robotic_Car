@@ -16,10 +16,8 @@
  *  - Read barcode in reverse
  * */
 //#include "barcode_buffer.c"
-#ifndef BARCODE_ISR_DATA_HEADER
-    #include "barcode_isr_data.h"
-    #define BARCODE_ISR_DATA_HEADER 1
-#endif
+#include "barcode_isr_data.h"
+
 #include "FreeRTOS.h"
 #include "queue.h"
 #include "task.h"
