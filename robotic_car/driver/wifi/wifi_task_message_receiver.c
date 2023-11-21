@@ -26,9 +26,9 @@ void wifi_task_message_receive_task( void *pvParameters ) {
             //Can remove one finished testing. Passing currentMessage object directly to SSI
             printf("Type: %d\n", currentMessage.type);
             printf("Message: %s\n", currentMessage.message);
-            }
         }
-        vTaskDelete(NULL); 
+    }
+    vTaskDelete(NULL); 
     }
 
 void init_wifi_intr_queue(QueueHandle_t * wifi_task_message_queue){
@@ -37,6 +37,7 @@ void init_wifi_intr_queue(QueueHandle_t * wifi_task_message_queue){
 
 void init_wifi_task_message_receive(){
     //init_barcode_buffer(get_barcode_buffer());
+    g_wifi_task_message_queue =  xQueueCreate(5, sizeof(WifiTaskMessage_t));
     xTaskCreate(wifi_task_message_receive_task,
                 "Barcode Interpret Task",
                 configMINIMAL_STACK_SIZE,

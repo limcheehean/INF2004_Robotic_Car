@@ -57,6 +57,7 @@ target_link_libraries(barcode_driver
 target_compile_definitions(barcode_driver PRIVATE
         #BARCODE_UNIT_TEST# = 1
         DISABLE_WIFI_MAIN
+        -DPICO_MAX_SHARED_IRQ_HANDLERS=5
 )
 
 pico_enable_stdio_usb(barcode_driver 1)

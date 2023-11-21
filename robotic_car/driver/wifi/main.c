@@ -10,9 +10,14 @@
     #define WIFI_TASK_MESSAGE_HEADER 1
 #endif
 
+
+#ifndef PICO_MAX_SHARED_IRQ_HANDLERS
+#define PICO_MAX_SHARED_IRQ_HANDLERS 4u
+#endif
+
 // WIFI Credentials - take care if pushing to github!
-const char WIFI_SSID[] = "ravirani"; //20V3
-const char WIFI_PASSWORD[] = "kanagarani18";
+const char WIFI_SSID[] = "AndroidAP_2237"; //20V3
+const char WIFI_PASSWORD[] = "7322password";
 // Kanagarani2!
 // S20,reness10
 //ravirani, kanagarani18
@@ -33,6 +38,8 @@ int main_2()
 
     cyw43_arch_enable_sta_mode();
 
+    init_wifi_task_message_receive();
+
     // Connect to the WiFI network - loop until connected
     while (cyw43_arch_wifi_connect_timeout_ms(WIFI_SSID, WIFI_PASSWORD, CYW43_AUTH_WPA2_AES_PSK, 30000) != 0)
     {
@@ -50,6 +57,8 @@ int main_2()
     // Configure SSI and CGI handler
     ssi_init();
     printf("SSI Handler initialised\n");
+    
+    printf("Initialized wifi task queue");
 //    cgi_init();
 //    printf("CGI Handler initialised\n");
     

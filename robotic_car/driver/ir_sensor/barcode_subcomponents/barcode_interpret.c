@@ -17,6 +17,7 @@
 #include "task.h"
 #include "barcode_buffer.c"
 #include "barcode_interpret.h"
+#include "wifi_task_message_buffer.h"
 
 
 TaskHandle_t g_barcode_interpret_task_handle;
@@ -186,7 +187,9 @@ void interpret_barcode( uint16_t barcode_buffer, bool * next_is_quiet, bool * re
     bool is_start_stop = 0;
     static bool is_reversed = 0;
     static bool is_reading = 0;
+    static WifiTaskMessage_t new_message;
 
+    new_message.type = 1;
     bool is_A = 1;
 
     /* Checking for start stop character only */
@@ -206,8 +209,10 @@ void interpret_barcode( uint16_t barcode_buffer, bool * next_is_quiet, bool * re
         }
     
         if (is_start_stop){
-            char message = '*';
-            xQueueSendFromISR(g_wifi_task_message_queue, &message, 0); 
+
+            new_message.message[0] = '*';
+            xQueueSend(g_wifi_task_message_queue, &new_message, 0); 
+
             #ifndef NOT_DEBUGGING
             printf("\n<BARCODE START>\n\n");
             #endif
@@ -227,8 +232,8 @@ void interpret_barcode( uint16_t barcode_buffer, bool * next_is_quiet, bool * re
             barcode_buffer = reverse_binary(barcode_buffer, BARCODE_BUFFER_SIZE);
         } 
         if ((barcode_buffer & BC_START_STOP) == BC_START_STOP){
-            char message = '*';
-            xQueueSendFromISR(g_wifi_task_message_queue, &message, 0); 
+            new_message.message[0] = '*';
+            xQueueSend(g_wifi_task_message_queue, &new_message, 0); 
             #ifndef NOT_DEBUGGING
             printf("\n<BARCODE STOP>\n\n");
             #endif
@@ -244,7 +249,9 @@ void interpret_barcode( uint16_t barcode_buffer, bool * next_is_quiet, bool * re
             /* Check through all characters */
             char c = get_barcode_char(barcode_buffer);
             if (c != ' '){
-                xQueueSendFromISR(g_wifi_task_message_queue, &c, 0); 
+
+                new_message.message[0] = c;
+                xQueueSend(g_wifi_task_message_queue, &new_message, 0); 
                 #ifndef NOT_DEBUGGING
                 printf(" \n READ %c\n",c);
                 #endif
