@@ -5,10 +5,7 @@
 #include "lwip/apps/httpd.h"
 #include "ssi.h"
 #include "cgi.h"
-#ifndef WIFI_TASK_MESSAGE_HEADER
-    #include "wifi_task_message_buffer.h"
-    #define WIFI_TASK_MESSAGE_HEADER 1
-#endif
+#include "wifi_task_message_buffer.h"
 
 
 #ifndef PICO_MAX_SHARED_IRQ_HANDLERS

@@ -1,3 +1,5 @@
+#ifndef CGI_HEADER_
+#define CGI_HEADER_
 #include "lwip/apps/httpd.h"
 #include "pico/cyw43_arch.h"
 
@@ -30,3 +32,4 @@ void cgi_init(void)
 {
     http_set_cgi_handlers(cgi_handlers, 1);
 }
+#endif

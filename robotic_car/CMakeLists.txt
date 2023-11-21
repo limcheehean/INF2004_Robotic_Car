@@ -1,5 +1,9 @@
 add_executable(robotic_car
         robotic_car.c
+
+        driver/wifi/wifi_task_message_receiver.c
+        driver/wifi/wifi_task_message_buffer.h
+        #driver/ir_sensor/test_with_wifi.c
         driver/motor/motor_controller.h
         driver/encoder/wheel_encoder.h
         test/motor_test.h
@@ -12,6 +16,7 @@ target_include_directories(robotic_car PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
 #        #${CMAKE_CURRENT_LIST_DIR}/../..
         ${CMAKE_CURRENT_LIST_DIR}/driver/ir_sensor/barcode_subcomponents/
+        ${CMAKE_CURRENT_LIST_DIR}/driver/wifi
         )
 
 target_link_libraries(robotic_car
@@ -22,6 +27,12 @@ target_link_libraries(robotic_car
         hardware_pwm
         FreeRTOS-Kernel-Heap4 # FreeRTOS kernel and dynamic heap
         )
+
+target_compile_definitions(robotic_car PRIVATE
+        #BARCODE_UNIT_TEST# = 1
+        DISABLE_WIFI_MAIN
+        -DPICO_MAX_SHARED_IRQ_HANDLERS=5
+)
 
 pico_enable_stdio_usb(robotic_car 1)
 pico_enable_stdio_uart(robotic_car 0)

@@ -1,6 +1,10 @@
+#define INTEGRATED
 #include "test/motor_test.h"
 #define INCLUDE_WHEEL_ENCODER 1
 #include "driver/ir_sensor/barcode_driver.c"
+#include "wifi_task_message_buffer.h"
+
+#include "../wifi/main.c"
 
 void generic_isr(uint gpio, uint32_t events) {
     if (gpio == BARCODE_PIN){
@@ -17,6 +21,9 @@ int main()
 {
 
     test_motor();
+
+
+    main_2();
 
     barcode_driver_init();
 

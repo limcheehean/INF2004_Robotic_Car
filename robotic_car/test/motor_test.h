@@ -6,8 +6,10 @@
 #include "driver/motor/motor_controller.h"
 #include "driver/encoder/wheel_encoder.h"
 
+#ifndef INTEGRATED
 #define WIFI_SSID "POCO F4 GT"
 #define WIFI_PASSWORD "qqsypbcppz7dt4m"
+#endif
 
 #define LEFT_MOTOR_PWM 0
 #define RIGHT_MOTOR_PWM 1
@@ -22,6 +24,7 @@
 
 void configure_wifi() {
 
+    #ifndef INTEGRATED
     cyw43_arch_init();
     cyw43_arch_enable_sta_mode();
 
@@ -31,6 +34,7 @@ void configure_wifi() {
     }
 
     printf("Connected to %s successfully\n", WIFI_SSID);
+    #endif
 }
 
 // Temporary power for sensors, use 3V3 when splitter available

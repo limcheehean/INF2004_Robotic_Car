@@ -1,6 +1,9 @@
 //temp_ssi.h
 //#include "lwip/apps/httpd.h"
 //#include "pico/cyw43_arch.h"
+
+#ifndef SSI_HEADER_
+#define SSI_HEADER_
 #include "hardware/adc.h"
 #include "wifi_task_message_buffer.h"
 
@@ -65,3 +68,5 @@ void ssi_init() {
 
     http_set_ssi_handler(ssi_handler, ssi_tags, 4);
 }
+
+#endif
