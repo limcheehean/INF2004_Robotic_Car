@@ -33,7 +33,8 @@ pico_add_extra_outputs(robotic_car)
 add_executable(barcode_driver
         #driver/wifi/main.c
         driver/wifi/wifi_task_message_receiver.c
-        driver/ir_sensor/barcode_driver.c
+        #driver/ir_sensor/barcode_driver.c
+        driver/ir_sensor/test_with_wifi.c
         #driver/ir_sensor/barcode_isr_data.h
         #driver/ir_sensor/barcode_interpret.c
         #driver/ir_sensor/barcode_buffer.c
@@ -54,7 +55,8 @@ target_link_libraries(barcode_driver
         )
 
 target_compile_definitions(barcode_driver PRIVATE
-        BARCODE_UNIT_TEST# = 1
+        #BARCODE_UNIT_TEST# = 1
+        DISABLE_WIFI_MAIN
 )
 
 pico_enable_stdio_usb(barcode_driver 1)

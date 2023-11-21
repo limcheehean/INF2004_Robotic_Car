@@ -23,7 +23,7 @@ typedef struct {
     // Add other members as needed
 } TaskParameters;
 
-int main()
+int main_2()
 {
 
     
@@ -58,5 +58,12 @@ int main()
     // wifi_task_message_receive_task((void *)&taskParams);
     // printf("wifi initialised\n");
     // Infinite loop
+}
+
+#ifndef DISABLE_WIFI_MAIN 
+int main(){
+    main_2();
+
     while (1);
 }
+#endif
