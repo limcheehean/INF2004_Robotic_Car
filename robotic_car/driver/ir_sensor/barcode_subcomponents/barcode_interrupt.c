@@ -31,8 +31,6 @@
 
 #define BARCODE_PIN 9
 
-#define BARCODE_BUFFER_SIZE 10
-#define BARCODE_BUFFER_READ_OFFSET (BARCODE_BUFFER_SIZE - 9)
 //#define BARCODE_MODULE_LOCAL
 
 
@@ -95,8 +93,6 @@ void barcode_edge_irq(uint gpio, uint32_t events){
     if (!(events == (GPIO_IRQ_EDGE_FALL | GPIO_IRQ_EDGE_RISE))){
         //taskENTER_CRITICAL_FROM_ISR();
         BarcodeISRData_t * barcode_isr_data = &(bm->barcode_isr_data);
-        //BarcodeBuffer_t * barcode_buffer = get_barcode_buffer();
-        //uint64_t old_time_passed = bm->barcode_isr_data.time_passed;
 
         /* Calculate time passed based on last time, and store current time as the new last time */
         barcode_isr_data->time_passed = current_time - barcode_isr_data->current_time;
@@ -119,7 +115,7 @@ void barcode_edge_irq(uint gpio, uint32_t events){
 
         //interpret_barcode();
         barcode_isr_data -> wheel_encoder_speed = get_encoder_data()->left_encoder.current_speed;
-        barcode_isr_data -> wheel_encoder_time = get_encoder_data()->left_encoder.last_time;
+        //barcode_isr_data -> wheel_encoder_time = get_encoder_data()->left_encoder.last_time;
         BaseType_t xHigherPriorityTaskWoken = pdFALSE;
         if (!xQueueSendFromISR(g_barcode_interpret_queue, &bm->barcode_isr_data /*barcode_isr_data*/, &xHigherPriorityTaskWoken)){
             //printf("\n\nBuffer full\n\n");
