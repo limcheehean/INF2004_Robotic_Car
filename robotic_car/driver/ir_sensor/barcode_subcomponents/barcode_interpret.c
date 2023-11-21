@@ -16,147 +16,209 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "barcode_buffer.c"
-
-/**
- * For personal reference:
- * taskENTER_CRITICAL();
- * taskEXIT_CRITICAL();
- * 
- * */
-
+#include "barcode_interpret.h"
 
 
 TaskHandle_t g_barcode_interpret_task_handle;
 
-BarcodeBuffer_t * get_barcode_buffer(){
-    static BarcodeBuffer_t barcode_buffer;
-    return &barcode_buffer;
+uint16_t g_barcode_buffer = 0x0;
+
+uint16_t reverse_binary(uint16_t value, int size){
+
+    uint16_t reversed_value = 0;
+
+    for (unsigned int i = 0; i < BARCODE_BUFFER_SIZE; i++) {
+
+        /* For every bit in buffer, if bit is 1 */
+        if (value & (1 << i)) {
+            /* Use bitwise or to set binary values from the back */
+            reversed_value |= (1 << ((BARCODE_BUFFER_SIZE - 1) - i));
+        }
+    }
+
+    return reversed_value;
 }
 
 void study_interrupt_value(
-    BarcodeISRData_t * old_barcode_isr_data_buffer,
-    BarcodeISRData_t * barcode_isr_data_buffer){
-
-    struct wheel_encoder_data * w_data = get_encoder_data();
-
-    //uint64_t old_time_passed = old_barcode_isr_data_buffer -> time_passed;
-    //uint64_t curr_time_passed = barcode_isr_data_buffer -> time_passed;
-
-    //int offset_sign = 1; 
+    BarcodeISRData_t new_isr_data,
+    uint16_t * barcode_buffer_ptr,
+    bool * next_is_quiet,
+    bool * refresh_buffers){
     
-    float old_length = old_barcode_isr_data_buffer -> time_passed * old_barcode_isr_data_buffer -> wheel_encoder_speed;
-    float new_length = barcode_isr_data_buffer -> time_passed * barcode_isr_data_buffer -> wheel_encoder_speed;
-    if (old_length == 0) {
-        /* Very likely, car won't move at the start, so the next barcode will have a very long duration
-            Hence, next barcode length will be long.
-            There should be a lot of white space before start of barcode, so that is guaranteed long as well.
-            1st line of barcode will be short.
-        */
-        printf("<Barcode length is an estimate for now!>\n");
-    }
-    if (old_length > new_length * 2){
-            //printf("<Barcode length>\tShort\n");
-            barcode_isr_data_buffer->is_short = 1;
-        }
-    else if (old_length * 2 < new_length){
-            //printf("<Barcode length>\tLong\n");
-            barcode_isr_data_buffer->is_short = 0;
-        }
-    else {
-        /* Same as previous */
-        if (old_barcode_isr_data_buffer->is_short){
-            //printf("<Barcode length>\tShort - past\n");
-            barcode_isr_data_buffer->is_short = 1;
-        }
-        else{
-            barcode_isr_data_buffer->is_short = 0;
-            //printf("<Barcode length>\tLong - past\n");
-        }
-    }
+    static BarcodeISRData_t isr_data_buffer[BARCODE_BUFFER_SIZE ];
+    static BarcodeISRData_t quiet_isr_data; /* Quiet zone */
+    static bool quiet_data_exist = 0;
 
-    barcode_buffer_put(get_barcode_buffer(), barcode_isr_data_buffer->is_short);
-    printf("[");
+    static int count = 0; /* How many bars so far */
+
+
+    if (* refresh_buffers) {
+
+        //printf("Refreshing buffers\n");
+        count = 0;
+        quiet_data_exist = 0;
+        * barcode_buffer_ptr = 0x0;
+        * refresh_buffers = false;
+    }
+    if ( * next_is_quiet) {
         
-    for(int loop = 0; loop < 10; loop++){
-        printf("%d,", barcode_buffer_get(get_barcode_buffer(), loop));
+        quiet_isr_data = new_isr_data;
+        * next_is_quiet = false;
+        quiet_data_exist = 1;
+        return;
     }
 
-    printf("] -> %2.2f | %2.2f\n", old_length, new_length);
+    
+    /* If ISR data buffer is full, shift all items back by 1 */
+    if (count >=  BARCODE_BUFFER_SIZE - 1){
+        for (int i = 1; i < BARCODE_BUFFER_SIZE; i++){
+            isr_data_buffer[i-1] = isr_data_buffer[i];
+        }
+    }
+
+    /* Assign new isr data to latest slot */
+    isr_data_buffer[count++] = new_isr_data;
+    //printf("mew isr data has %jd\n", count-1, new_isr_data.time_passed);
+
+    /* If buffer is full, start finding average */
+
+    if (count >= BARCODE_BUFFER_SIZE){
+        count=BARCODE_BUFFER_SIZE-1;
+
+        float total_items = BARCODE_BUFFER_SIZE;
+        float total_time_passed = 0;
+        float average = 0;
+
+
+        /* Iterate to find total */
+        for (int i = 0; i< BARCODE_BUFFER_SIZE; i++){
+            BarcodeISRData_t data = isr_data_buffer[i];
+            total_time_passed += (float) data.time_passed * data.wheel_encoder_speed; //speed * time
+            printf("%2.2f| ", (float) data.time_passed * data.wheel_encoder_speed);
+        }
+        //printf("our isr data at index %d has %jd\n", count, isr_data_buffer[count].time_passed);
+        printf("\n");
+        //include quiet zone into total calculation
+        if (quiet_data_exist) {
+            total_items += 1; 
+            total_time_passed += (float) quiet_isr_data.time_passed * quiet_isr_data.wheel_encoder_speed;
+        }
+
+        /* Find average */  
+        average = total_time_passed / total_items;
+        /* IMPROVEMENTS: Use quiet data as integrity check */
+
+        /* Reset barcode buffer, start setting bits to 1 if width is short */
+        * barcode_buffer_ptr = 0;
+        for (int i = 0; i < BARCODE_BUFFER_SIZE; i++) {
+
+            /* If time passed is than average, set corresponding bit to 1 */
+            if (  (float)isr_data_buffer[i].time_passed * isr_data_buffer[i].wheel_encoder_speed <= average){
+                *barcode_buffer_ptr |= ( 1 << i); 
+            }
+        }
+        
+        #ifndef NOT_DEBUGGING
+        printf("[");
+        
+        for(int loop = 0; loop < BARCODE_BUFFER_SIZE; loop++){
+            printf("%d,", (*barcode_buffer_ptr >> BARCODE_BUFFER_SIZE -1 - loop) & 1  );
+        }
+
+        printf("] -> Average of %f\n", average);
+        #endif
+    }
         
 }
 
-void interpret_barcode(bool * is_reading, BarcodeBuffer_t * barcode_buffer){
-    //BarcodeBuffer_t * barcode_buffer = get_barcode_buffer();
+void interpret_barcode( uint16_t barcode_buffer, bool * next_is_quiet, bool * refresh_buffers){
+    
     int index_to_copy = 0;
-    bool is_start_stop = 1;
-    static int start_stop_barcode_fwd[] = {1,0,1,1,0,1,0,1,1};
-    static int start_stop_barcode_bwd[] = {1,1,0,1,0,1,1,0,1};
-
-    static int char_A[] =                 {0,1,1,1,1,0,1,1,0};
+    bool is_start_stop = 0;
+    static bool is_reversed = 0;
+    static bool is_reading = 0;
 
     bool is_A = 1;
-    if (!*is_reading){
+
+    /* Checking for start stop character only */
+    if (!is_reading){
         /* To do: Quiet Zone should be used to determine short length*/
-        for (int i = BARCODE_BUFFER_READ_OFFSET; i < 10; i++){
-            
-            if (barcode_buffer_get(barcode_buffer, i) != start_stop_barcode_fwd[i - BARCODE_BUFFER_READ_OFFSET]){
-                is_start_stop = 0;
-                break;
+
+        if (barcode_buffer == BC_START_STOP){
+            is_start_stop = 1;
+            is_reversed = 0;
+        }
+        else {
+            barcode_buffer = reverse_binary(barcode_buffer, BARCODE_BUFFER_SIZE);
+            if (barcode_buffer == BC_START_STOP){
+                is_start_stop = 1;
+                is_reversed = 1;
             }
         }
+    
         if (is_start_stop){
+            #ifndef NOT_DEBUGGING
             printf("\n<BARCODE START>\n\n");
-            barcode_buffer_clear(barcode_buffer);
-            *is_reading = 1;
+            #endif
+            * refresh_buffers = true;
+            is_reading = true;
+            *next_is_quiet = true;
+
+            is_start_stop = 0;
         }
     }
+
+    /* Start checking for all characters */
     else {
-        
-        for (int i = BARCODE_BUFFER_READ_OFFSET; i < 10; i++){
-            if (is_A){
-                if (barcode_buffer_get(barcode_buffer, i) != char_A[i - BARCODE_BUFFER_READ_OFFSET]){
-                    is_A = 0;
-                    //break;
-                }
-            }
-            if (is_start_stop){
-                if (barcode_buffer_get(barcode_buffer, i) != start_stop_barcode_fwd[i - BARCODE_BUFFER_READ_OFFSET]){
-                    is_start_stop = 0;
-                    //break;
-                }
+
+        /* Reverse barcode buffer if needed */
+        if (is_reversed){
+            barcode_buffer = reverse_binary(barcode_buffer, BARCODE_BUFFER_SIZE);
+        } 
+        if (barcode_buffer == BC_START_STOP){
+            // clear barcode buffer
+            * refresh_buffers = true;
+            * next_is_quiet = true;
+
+            /* Reset function states */
+            is_reading = 0;
+            is_reversed = 0;
+        }
+        else{
+            /* Check through all characters */
+            char c = get_barcode_char(barcode_buffer);
+            if (c != ' '){
+
+                #ifndef NOT_DEBUGGING
+                printf(" \n READ %c\n",c);
+                #endif
+
+                /* Send to web server */
+
+                /* Signal to clear buffer */
+                * refresh_buffers = true;
             }
 
-            // If array do not contain A for start/stop for sure, stop checking
-            if (!is_A && !is_start_stop){
-                break;
-            }
+
         }
-        if (is_A){
-            printf("\n<BARCODE> Letter A detected\n\n");
-            barcode_buffer_clear(barcode_buffer);
-        }
-        else if (is_start_stop){
-            printf("\n<STOP BARCODE>\n\n");
-            barcode_buffer_clear(barcode_buffer);
-            *is_reading = 0;
-        }
+
     }
 
 }
 
 void barcode_interpret_task( void *pvParameters ) {
-    BarcodeISRData_t old_barcode_isr_data_buffer;
-    BarcodeISRData_t barcode_isr_data_buffer;
+    
+    BarcodeISRData_t new_isr_data;
     bool is_reading = false;
-    //configASSERT( ( ( uint32_t ) pvParameters ) == 1 );
-    //int buffer = 0;
+
+    bool refresh_buffers = false;
+    bool next_is_quiet = false;
+
     for (;;){
-        if (xQueueReceive(g_barcode_interpret_queue, &barcode_isr_data_buffer, portMAX_DELAY) == pdPASS){
-
-            study_interrupt_value(&old_barcode_isr_data_buffer, &barcode_isr_data_buffer);
-            interpret_barcode(&is_reading, get_barcode_buffer());
-
-            old_barcode_isr_data_buffer = barcode_isr_data_buffer;
+        if (xQueueReceive(g_barcode_interpret_queue, &new_isr_data, portMAX_DELAY) == pdPASS){
+            study_interrupt_value(new_isr_data, &g_barcode_buffer, &next_is_quiet, &refresh_buffers);
+            interpret_barcode(g_barcode_buffer, &next_is_quiet, &refresh_buffers);
+            
         }
         
     }
@@ -165,7 +227,7 @@ void barcode_interpret_task( void *pvParameters ) {
 }
 
 void init_barcode_interpret_task(){
-    init_barcode_buffer(get_barcode_buffer());
+
     xTaskCreate(barcode_interpret_task,
                 "Barcode Interpret Task",
                 configMINIMAL_STACK_SIZE,
