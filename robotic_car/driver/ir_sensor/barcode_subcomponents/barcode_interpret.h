@@ -17,7 +17,7 @@ typedef struct{
 
 char get_value_for_key(KeyValuePair dict[], int dictSize, int key) {
     for (int i = 0; i < dictSize; i++) {
-        if (dict[i].key == key) {
+        if ( (dict[i].key & key) == dict[i].key) {
             return dict[i].value;
         }
     }
