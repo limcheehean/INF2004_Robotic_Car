@@ -35,6 +35,7 @@ void configure_wifi() {
 
     printf("Connected to %s successfully\n", WIFI_SSID);
     #endif
+
 }
 
 // Temporary power for sensors, use 3V3 when splitter available
@@ -72,4 +73,22 @@ void test_motor() {
 
     //while (true);
 
+}
+
+void init_motor(){
+    // Configure sensors using GPIO power
+    configure_sensor_power(LEFT_ENCODER_POWER);
+    configure_sensor_power(RIGHT_ENCODER_POWER);
+
+    // Configure motor controller
+    init_motor_controller(LEFT_MOTOR_PWM,
+                          RIGHT_MOTOR_PWM,
+                          LEFT_MOTOR_FORWARD,
+                          RIGHT_MOTOR_FORWARD,
+                          LEFT_MOTOR_BACKWARD,
+                          RIGHT_MOTOR_BACKWARD);
+
+    // Configure wheel encoder
+    init_wheel_encoder(LEFT_ENCODER_INPUT,
+                       RIGHT_ENCODER_INPUT);
 }

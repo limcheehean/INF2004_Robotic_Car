@@ -20,8 +20,9 @@ void generic_isr(uint gpio, uint32_t events) {
 int main()
 {
 
-    test_motor();
+    //test_motor();
 
+    init_motor();
 
     main_2();
 
