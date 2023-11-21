@@ -2,6 +2,7 @@
 #include "FreeRTOS.h"
 #include <stdio.h>
 #include "queue.h"
+#define BARCODE_BUFFER_SIZE 10
 
 /*
 
@@ -29,3 +30,17 @@ typedef struct {
 } BarcodeISRData_t;
 
 QueueHandle_t g_barcode_interpret_queue;
+
+typedef struct {
+    int buffer_curr_index;
+    bool array[BARCODE_BUFFER_SIZE];
+} BarcodeBuffer_t;
+
+#ifndef BARCODE_MODULE_H
+#define BARCODE_MODULE_H
+
+extern QueueHandle_t g_barcode_interpret_queue;
+extern void init_barcode_buffer(BarcodeBuffer_t * barcode_buffer);
+extern void *get_barcode_buffer(void);
+
+#endif  // BARCODE_MODULE_H
