@@ -5,10 +5,7 @@
 #define BARCODE_BUFFER_SIZE 10
 #define BARCODE_BUFFER_READ_OFFSET (BARCODE_BUFFER_SIZE - 9)
 
-typedef struct {
-    int buffer_curr_index;
-    bool array[BARCODE_BUFFER_SIZE];
-} BarcodeBuffer_t;
+
 
 
 void init_barcode_buffer(BarcodeBuffer_t * barcode_buffer){

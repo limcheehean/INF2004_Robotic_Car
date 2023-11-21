@@ -2,14 +2,17 @@
 //#include "lwip/apps/httpd.h"
 //#include "pico/cyw43_arch.h"
 #include "hardware/adc.h"
+#include "wifi_task_message_buffer.h"
 
 // SSI tags - tag length limited to 8 bytes by default
-const char * ssi_tags[] = {"volt","temp","led", "message"};
+const char * ssi_tags[] = {"volt","temp", "type", "message"};
 
 u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen) {
-    printf("Hello why u not working\n");
+    printf("Hello why u not working,\n");
+    printf("Type: %d\n", currentMessage.type);
     size_t printed;
-    switch (iIndex) {
+    //if (xSemaphoreTake(wifi_data_mutex, portMAX_DELAY) == pdTRUE) {
+        switch (iIndex) {
         case 0: // volt
         {
             const float voltage = adc_read() * 3.3f / (1 << 12);
@@ -34,10 +37,14 @@ u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen) {
 //            }
 //        }
 //            break;
+        case 2:
+        {
+            printed = snprintf(pcInsert, iInsertLen, "%d", currentMessage.type);
+        }
+            break;
         case 3:
         {
-            const int checkValue = 42;
-            printed = snprintf(pcInsert, iInsertLen, "%d", checkValue);
+            printed = snprintf(pcInsert, iInsertLen, "%s", currentMessage.message);
         }
             break;
         default:
@@ -46,6 +53,7 @@ u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen) {
     }
 
     return (u16_t)printed;
+    //}
 }
 
 // Initialise the SSI handler

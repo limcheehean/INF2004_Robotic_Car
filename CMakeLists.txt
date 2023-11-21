@@ -32,6 +32,7 @@ execute_process(COMMAND
 
 add_executable(pico_w_webserver1
         main.c
+        wifi_task_message_receiver.c
 )
 
 #target_compile_definitions(pico_w_webserver1 PRIVATE
@@ -51,7 +52,7 @@ target_link_libraries(pico_w_webserver1
     pico_cyw43_arch_lwip_threadsafe_background
     pico_stdlib
     pico_lwip_iperf
-    FreeRTOS-Kernel-Heap4 # FreeRTOS kernel and dynamic heap
+    FreeRTOS-Kernel-Heap4 
     pico_lwip_http
     pico_lwip_iperf
     hardware_adc
