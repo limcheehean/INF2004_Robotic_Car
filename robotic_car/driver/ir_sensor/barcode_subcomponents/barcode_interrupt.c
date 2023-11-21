@@ -83,34 +83,30 @@ void barcode_edge_irq(uint gpio, uint32_t events){
     
     BarcodeModule * bm = get_barcode_module();
     static uint64_t last_time = 0;
+
     /* Get current time*/
     uint32_t current_time = to_ms_since_boot(get_absolute_time());
-    // if ((current_time - last_time) < 10) {
-    //     printf("DEBOUNCE\n");
-    //     return;
-    // }
-    // else {last_time = current_time;}
+
     if (!(events == (GPIO_IRQ_EDGE_FALL | GPIO_IRQ_EDGE_RISE))){
-        //taskENTER_CRITICAL_FROM_ISR();
+
         BarcodeISRData_t * barcode_isr_data = &(bm->barcode_isr_data);
 
-        /* Calculate time passed based on last time, and store current time as the new last time */
         barcode_isr_data->time_passed = current_time - barcode_isr_data->current_time;
-        //barcode_isr_data->last_time = current_time;
+
         barcode_isr_data->current_time = current_time;
 
         if (events == GPIO_IRQ_EDGE_RISE){
-            /* Was white line */
+
             barcode_isr_data->high = false;
-            //printf("<Barcode> |%d\t | Low\t| %d ms\t|\n",bm->barcode_isr_data.is_short, bm->barcode_isr_data.time_passed);
+
         }
     
 
         /* Exited black region */
         else if (events == GPIO_IRQ_EDGE_FALL){
-            /* Was black line */
+            
             barcode_isr_data->high = true;
-            //printf("<Barcode> |%d\t |High\t| %d ms\t| %2.2f\t|\n",bm->barcode_isr_data.is_short, bm->barcode_isr_data.time_passed);
+
         }
 
         //interpret_barcode();

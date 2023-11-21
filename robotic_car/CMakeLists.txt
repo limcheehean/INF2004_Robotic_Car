@@ -10,7 +10,7 @@ add_executable(robotic_car
 
 target_include_directories(robotic_car PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
-        ${CMAKE_CURRENT_LIST_DIR}/../..
+        #${CMAKE_CURRENT_LIST_DIR}/../..
         ${CMAKE_CURRENT_LIST_DIR}/driver/ir_sensor/barcode_subcomponents/
         )
 
@@ -82,3 +82,25 @@ pico_enable_stdio_uart(ultrasonic_sensor_driver 0)
 pico_add_extra_outputs(ultrasonic_sensor_driver)
 
 example_auto_set_url(ultrasonic_sensor_driver)
+
+
+# Wall sensors
+add_executable(wall_interrupt
+        driver/ir_sensor/wall/wall_interrupt.c
+)
+target_include_directories(wall_interrupt PRIVATE
+        ${CMAKE_CURRENT_LIST_DIR}
+        )
+target_link_libraries(wall_interrupt
+        pico_stdlib
+        FreeRTOS-Kernel-Heap4 # FreeRTOS kernel and dynamic heap
+        )
+
+target_compile_definitions(wall_interrupt PRIVATE
+        
+)
+
+pico_enable_stdio_usb(wall_interrupt 1)
+pico_enable_stdio_uart(wall_interrupt 0)
+
+pico_add_extra_outputs(wall_interrupt)

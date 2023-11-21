@@ -54,8 +54,8 @@ void study_interrupt_value(
 
     //int offset_sign = 1; 
 
-    float old_length = old_isr_data -> time_passed * old_isr_data -> wheel_encoder_speed;
-    float new_length = new_isr_data -> time_passed * new_isr_data ->  wheel_encoder_speed;
+    float old_length = old_isr_data -> time_passed; //* old_isr_data -> wheel_encoder_speed;
+    float new_length = new_isr_data -> time_passed; //* new_isr_data ->  wheel_encoder_speed;
     if (old_length == 0) {
         /* Very likely, car won't move at the start, so the next barcode will have a very long duration
             Hence, next barcode length will be long.
