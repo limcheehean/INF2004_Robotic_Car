@@ -78,20 +78,10 @@ Calibrated_Data calibrate(int16_t x, int16_t y, int16_t z) {
     float y_offset = (y_max + y_min) / 2;
     float z_offset = (z_max + z_min) / 2;
 
-    float x_avg_delta = (x_max - x_min) / 2;
-    float y_avg_delta = (y_max - y_min) / 2;
-    float z_avg_delta = (z_max - z_min) / 2;
-
-    float avg_delta = (x_avg_delta + y_avg_delta + z_avg_delta) / 3;
-
-    float x_scale = avg_delta / x_avg_delta;
-    float y_scale = avg_delta / y_avg_delta;
-    float z_scale = avg_delta / z_avg_delta;
-
     Calibrated_Data calibrated_data;
-    calibrated_data.x = (x - x_offset) * x_scale;
-    calibrated_data.y = (y - y_offset) * y_scale;
-    calibrated_data.z = (z - z_offset) * z_scale;
+    calibrated_data.x = x - x_offset;
+    calibrated_data.y = y - y_offset;
+    calibrated_data.z = z - z_offset;
 
     return calibrated_data;
 }
