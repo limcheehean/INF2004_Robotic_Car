@@ -62,6 +62,8 @@ target_link_libraries(barcode_driver
         FreeRTOS-Kernel-Heap4 
         pico_lwip_http
         pico_lwip_iperf
+
+        hardware_pwm
         hardware_adc
         )
 
