@@ -58,12 +58,6 @@ void wheel_moved_isr(uint gpio, uint32_t events) {
 
     // Select the correct encoder based on GPIO
     struct wheel_encoder * encoder = gpio == data->left_encoder.pin ? &data->left_encoder : &data->right_encoder;
-    if (data->left_encoder.pin == gpio){
-        printf("LEFT \n");
-    }
-    else {
-        printf("RIGHT \n");
-    }
 
     encoder->ticks++;
     encoder->total_distance = (float)encoder->ticks / 40 * 20.4f;//33.2f;
