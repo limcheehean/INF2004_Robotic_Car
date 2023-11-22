@@ -31,29 +31,31 @@ const char *cgi_move_handler(int iIndex, int iNumParams, char *pcParam[], char *
         strcmp(pcParam[2], "right_power") == 0)
     {
 
-        float left_power = atoi(pcValue[1]) / 100.0f;
-        float right_power = atoi(pcValue[2]) / 100.0f;
+        float left_power = atoff(pcValue[1]);
+        float right_power = atoff(pcValue[2]);
+        int left_ticks = atoi(pcValue[3]);
+        int right_ticks = atoi(pcValue[4]);
 
         if (strcmp(pcValue[0], "up") == 0)
         {
-            printf("[FORWARD] Left: %.2f, Right: %.2f\n", left_power, right_power);
+            printf("[FORWARD] Left: %.2f (%d ticks), Right: %.2f (%d ticks)\n", left_power, left_ticks, right_power, right_ticks);
             // move_forward(left_power, right_power);
-            false_move_forward(left_power, right_power);
+            move_forward_for_ticks(left_power, right_power, left_ticks, right_ticks);
         }
         else if (strcmp(pcValue[0], "down") == 0)
         {
-            printf("[BACKWARD] Left: %.2f, Right: %.2f\n", left_power, right_power);
-            move_backward(left_power, right_power);
+            printf("[BACKWARD] Left: %.2f (%d ticks), Right: %.2f (%d ticks)\n", left_power, left_ticks, right_power, right_ticks);
+            move_backward_for_ticks(left_power, right_power, left_ticks, right_ticks);
         }
         else if (strcmp(pcValue[0], "left") == 0)
         {
-            printf("[LEFT]\n");
-            turn_left(1);
+            printf("[LEFT] %.2f (%d ticks)\n", right_power, right_ticks);
+            turn_left_for_ticks(right_power, right_ticks);
         }
         else if (strcmp(pcValue[0], "right") == 0)
         {
-            printf("[RIGHT]\n");
-            turn_right(1);
+            printf("[RIGHT] %.2f (%d ticks)\n", left_power, left_ticks);
+            turn_right_for_ticks(left_power, left_ticks);
         }
         else if (strcmp(pcValue[0], "stop") == 0)
         {
