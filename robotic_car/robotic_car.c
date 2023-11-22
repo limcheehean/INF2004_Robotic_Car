@@ -72,7 +72,7 @@ int main()
     cgi_init();
     printf("cgi initialized\n");
 
-    move_forward(0.5,0.75);
+    move_forward(0.5,0.65);
 
     printf("Move forwards!\n");
 

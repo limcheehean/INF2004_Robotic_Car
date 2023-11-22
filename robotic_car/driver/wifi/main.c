@@ -21,7 +21,7 @@ const char WIFI_PASSWORD[] = "7322password";
 // S20,reness10
 // ravirani, kanagarani18
 
-int main()
+int main_2()
 {
 
     stdio_usb_init();
@@ -68,16 +68,22 @@ int main()
         printf("Error creating g_concatenatedMessagesQueue\n");
     }
 
+    #ifndef DISABLE_WIFI_MAIN
     if (xTaskCreate(wifi_task_message_receive_task_testData, "Wifi totalMessage Task", configMINIMAL_STACK_SIZE, (void *)0, tskIDLE_PRIORITY, &g_wifi_task_message_task_handle_test) != pdPASS)
     {
         printf("Error creating wifi_task_message_receive_task_test\n");
     }
+    #endif
+}
 
+#ifndef DISABLE_WIFI_MAIN
+int main(){
     vTaskStartScheduler();
 
     while (1)
         ;
 }
+#endif
 
 // #ifndef DISABLE_WIFI_MAIN
 // int main(){

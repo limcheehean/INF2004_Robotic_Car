@@ -45,6 +45,7 @@ void wifi_task_message_receive_task(void *pvParameters)
     vTaskDelete(NULL);
 }
 
+#ifndef DISABLE_WIFI_MAIN
 void wifi_task_message_receive_task_testData(void *pvParameters)
 {
 
@@ -62,7 +63,7 @@ void wifi_task_message_receive_task_testData(void *pvParameters)
 
     vTaskDelete(NULL);
 }
-
+#endif
 void init_wifi_intr_queue(QueueHandle_t *wifi_task_message_queue)
 {
     g_wifi_task_message_queue = *wifi_task_message_queue;
