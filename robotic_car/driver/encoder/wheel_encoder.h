@@ -30,6 +30,27 @@ struct wheel_encoder_data * get_encoder_data() {
 
 }
 
+// Function to compute the control signal
+float compute_pid(float setpoint, float current_value) {
+    static float Kp = 1.0; 
+    static float Ki = 0.1; 
+    static float Kd = 0.01; 
+    static float integral = 0;
+    static float prev_error = 0;
+    float error = setpoint - current_value;
+    
+    integral += error;
+    
+    float derivative = error - prev_error;
+    
+    float control_signal = Kp * error + Ki * (integral) + Kd * derivative;
+    
+    prev_error = error;
+    
+    return control_signal;
+}
+
+
 void wheel_moved_isr(uint gpio, uint32_t events) {
 
     struct wheel_encoder_data * data = get_encoder_data();

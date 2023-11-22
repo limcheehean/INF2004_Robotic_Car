@@ -40,7 +40,7 @@ pico_enable_stdio_uart(robotic_car 0)
 pico_add_extra_outputs(robotic_car)
 
 
-
+# barcode
 add_executable(barcode_driver
         #driver/wifi/main.c
         driver/wifi/wifi_task_message_receiver.c
@@ -62,6 +62,8 @@ target_link_libraries(barcode_driver
         FreeRTOS-Kernel-Heap4 
         pico_lwip_http
         pico_lwip_iperf
+
+        hardware_pwm
         hardware_adc
         )
 
@@ -164,6 +166,7 @@ target_link_libraries(pico_w_webserver
     pico_lwip_http
     pico_lwip_iperf
     hardware_adc
+    hardware_pwm
 )
 
 target_compile_definitions(pico_w_webserver PRIVATE
@@ -174,3 +177,50 @@ pico_enable_stdio_usb(pico_w_webserver TRUE)
 pico_enable_stdio_uart(pico_w_webserver FALSE)
 
 pico_add_extra_outputs(pico_w_webserver)
+
+
+# decider
+
+add_executable(decider
+        decider.c
+
+        driver/wifi/wifi_task_message_receiver.c
+        driver/wifi/wifi_task_message_buffer.h
+        #driver/ir_sensor/test_with_wifi.c
+        driver/motor/motor_controller.h
+        driver/encoder/wheel_encoder.h
+        test/motor_test.h
+
+        # Barcode related modules
+        #driver/ir_sensor/barcode_driver.c
+        )
+
+target_include_directories(decider PRIVATE
+        ${CMAKE_CURRENT_LIST_DIR}
+        ${CMAKE_CURRENT_LIST_DIR}/driver/motor_controller/
+        ${CMAKE_CURRENT_LIST_DIR}/driver/ir_sensor/barcode_subcomponents/
+        ${CMAKE_CURRENT_LIST_DIR}/driver/wifi
+        ${CMAKE_CURRENT_LIST_DIR}/driver/magnetnometer
+        )
+
+target_link_libraries(decider
+        pico_cyw43_arch_lwip_threadsafe_background
+        pico_lwip_http
+        pico_stdlib
+        hardware_adc
+        hardware_pwm
+        hardware_i2c
+        FreeRTOS-Kernel-Heap4 # FreeRTOS kernel and dynamic heap
+        )
+
+target_compile_definitions(decider PRIVATE
+        #BARCODE_UNIT_TEST# = 1
+        DECIDER_TEST
+        DISABLE_WIFI_MAIN
+        -DPICO_MAX_SHARED_IRQ_HANDLERS=5
+)
+
+pico_enable_stdio_usb(decider 1)
+pico_enable_stdio_uart(decider 0)
+
+pico_add_extra_outputs(decider)

@@ -8,6 +8,7 @@ struct motor {
     int pwm_pin;
     int forward_pin;
     int backward_pin;
+    float intended_speed;
     uint slice;
     uint channel;
 };
@@ -77,6 +78,8 @@ void init_motor_controller(int left_pwm_pin,
 void set_wheel_speed(float left_speed, float right_speed) {
 
     struct motor_driver * config = get_configuration();
+    config -> left_motor.intended_speed = left_speed;
+    config -> right_motor.intended_speed = right_speed;
     pwm_set_chan_level(config->left_motor.slice, config->left_motor.channel, (int)(left_speed * 12500));
     pwm_set_chan_level(config->right_motor.slice, config->right_motor.channel, (int)(right_speed * 12500));
 
@@ -97,6 +100,11 @@ void set_wheel_direction(int left_forward, int right_forward) {
 // Move car forward
 void move_forward(float left_speed, float right_speed) {
     set_wheel_direction(FORWARD, FORWARD);
+    set_wheel_speed(left_speed, right_speed);
+}
+
+void false_move_forward(float left_speed, float right_speed) {
+    set_wheel_direction(FORWARD, BACKWARD);
     set_wheel_speed(left_speed, right_speed);
 }
 

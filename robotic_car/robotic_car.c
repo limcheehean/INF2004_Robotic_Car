@@ -44,6 +44,8 @@ int main()
 
     gpio_set_irq_callback(&generic_isr);
 
+    cgi_init();
+
     vTaskStartScheduler(); /* NEED THIS */
 
     while (true);

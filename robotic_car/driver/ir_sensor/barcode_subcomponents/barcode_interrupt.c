@@ -27,7 +27,7 @@
 #endif
 
 
-#define BARCODE_PIN 9
+#define BARCODE_PIN 11
 
 //#define BARCODE_MODULE_LOCAL
 
