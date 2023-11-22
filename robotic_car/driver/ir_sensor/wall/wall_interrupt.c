@@ -11,6 +11,7 @@ void barcode_edge_irq(uint gpio, uint32_t events){
     }
 }
 
+#ifdef WALL_UNIT_TEST_
 int main(){
 
     stdio_init_all();
@@ -23,3 +24,4 @@ int main(){
     gpio_set_irq_callback(&barcode_edge_irq);
 
 }
+#endif
