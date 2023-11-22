@@ -85,7 +85,32 @@ Calibrated_Data calibrate(int16_t x, int16_t y, int16_t z) {
 
     return calibrated_data;
 }
+int init_magnetometer(){
+    i2c_init(I2C_PORT, I2C_CLOCK_FREQ);
+    i2c_set_slave_mode(I2C_PORT, false, 0);
+    gpio_set_function(I2C_SDA_PIN, GPIO_FUNC_I2C);
+    gpio_set_function(I2C_SCL_PIN, GPIO_FUNC_I2C);
 
+    configure(ACC_ADDR, ACC_CTRL_REG1, 0x57);
+    configure(MAG_ADDR, MAG_MR_REG, 0x00);
+}
+float get_heading(){
+    Acc_Data acc_data;
+        acc_data.x = (int16_t)((read(ACC_ADDR, ACC_X_MSB) << 8) | read(ACC_ADDR, ACC_X_LSB));
+        acc_data.y = (int16_t)((read(ACC_ADDR, ACC_Y_MSB) << 8) | read(ACC_ADDR, ACC_Y_LSB));
+        acc_data.z = (int16_t)((read(ACC_ADDR, ACC_Z_MSB) << 8) | read(ACC_ADDR, ACC_Z_LSB));
+
+        // Extract and format the magnetometer data
+        Mag_Data mag_data;
+        mag_data.x = (int16_t)((read(MAG_ADDR, MAG_X_MSB) << 8) | read(MAG_ADDR, MAG_X_LSB));
+        mag_data.y = (int16_t)((read(MAG_ADDR, MAG_Y_MSB) << 8) | read(MAG_ADDR, MAG_Y_LSB));
+        mag_data.z = (int16_t)((read(MAG_ADDR, MAG_Z_MSB) << 8) | read(MAG_ADDR, MAG_Z_LSB));
+
+        Calibrated_Data calibrated_data = calibrate(mag_data.x, mag_data.y, mag_data.z);
+
+        float heading = atan2(calibrated_data.y, calibrated_data.x) * 180 / M_PI;
+}
+#ifdef TEST_MAGNETOMETER
 int main() {
     stdio_init_all();
     i2c_init(I2C_PORT, I2C_CLOCK_FREQ);
@@ -126,3 +151,4 @@ int main() {
 
     return 0;
 }
+#endif

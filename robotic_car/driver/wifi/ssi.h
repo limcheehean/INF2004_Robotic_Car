@@ -1,6 +1,6 @@
-//temp_ssi.h
-//#include "lwip/apps/httpd.h"
-//#include "pico/cyw43_arch.h"
+// temp_ssi.h
+// #include "lwip/apps/httpd.h"
+// #include "pico/cyw43_arch.h"
 
 #ifndef SSI_HEADER_
 #define SSI_HEADER_
@@ -8,51 +8,49 @@
 #include "wifi_task_message_buffer.h"
 
 // SSI tags - tag length limited to 8 bytes by default
-const char * ssi_tags[] = {"volt","temp", "type", "message"};
+const char *ssi_tags[] = {"volt", "temp", "type", "message"};
 
-u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen) {
-    printf("Hello why u not working,\n");
+u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen)
+{
     printf("Type: %d\n", currentMessage.type);
+    printf("Concatenate: %s,", totalMessage.message);
     size_t printed;
-    //if (xSemaphoreTake(wifi_data_mutex, portMAX_DELAY) == pdTRUE) {
-        switch (iIndex) {
-        case 0: // volt
+    switch (iIndex)
+    {
+    case 0: // volt
+    {
+        const float voltage = adc_read() * 3.3f / (1 << 12);
+        printed = snprintf(pcInsert, iInsertLen, "%f", voltage);
+    }
+    break;
+    case 1: // temp
+    {
+        const float voltage = adc_read() * 3.3f / (1 << 12);
+        const float tempC = 27.0f - (voltage - 0.706f) / 0.001721f;
+        printed = snprintf(pcInsert, iInsertLen, "%f", tempC);
+    }
+    break;
+    case 2:
+    {
+        printed = snprintf(pcInsert, iInsertLen, "%d", totalMessage.type);
+    }
+    break;
+    case 3:
+    {
+        if (xQueueReceive(g_concatenatedMessagesQueue, &totalMessage, 0) == pdTRUE)
         {
-            const float voltage = adc_read() * 3.3f / (1 << 12);
-            printed = snprintf(pcInsert, iInsertLen, "%f", voltage);
+
+            printed = snprintf(pcInsert, iInsertLen, "%s", totalMessage.message);
         }
-            break;
-        case 1: // temp
+        else
         {
-            const float voltage = adc_read() * 3.3f / (1 << 12);
-            const float tempC = 27.0f - (voltage - 0.706f) / 0.001721f;
-            printed = snprintf(pcInsert, iInsertLen, "%f", tempC);
+            printed = snprintf(pcInsert, iInsertLen, "Queue reception failed");
         }
-            break;
-//        case 2: // led
-//        {
-//            bool led_status = cyw43_arch_gpio_get(CYW43_WL_GPIO_LED_PIN);
-//            if(led_status == true){
-//                printed = snprintf(pcInsert, iInsertLen, "ON");
-//            }
-//            else{
-//                printed = snprintf(pcInsert, iInsertLen, "OFF");
-//            }
-//        }
-//            break;
-        case 2:
-        {
-            printed = snprintf(pcInsert, iInsertLen, "%d", currentMessage.type);
-        }
-            break;
-        case 3:
-        {
-            printed = snprintf(pcInsert, iInsertLen, "%s", currentMessage.message);
-        }
-            break;
-        default:
-            printed = 0;
-            break;
+    }
+    break;
+    default:
+        printed = 0;
+        break;
     }
 
     return (u16_t)printed;
@@ -60,7 +58,8 @@ u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen) {
 }
 
 // Initialise the SSI handler
-void ssi_init() {
+void ssi_init()
+{
     // Initialise ADC (internal pin)
     adc_init();
     adc_set_temp_sensor_enabled(true);
