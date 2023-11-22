@@ -100,6 +100,11 @@ void move_forward(float left_speed, float right_speed) {
     set_wheel_speed(left_speed, right_speed);
 }
 
+void false_move_forward(float left_speed, float right_speed) {
+    set_wheel_direction(FORWARD, BACKWARD);
+    set_wheel_speed(left_speed, right_speed);
+}
+
 // Move car backward
 void move_backward(float left_speed, float right_speed) {
     set_wheel_direction(BACKWARD, BACKWARD);
