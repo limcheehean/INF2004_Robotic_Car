@@ -1,3 +1,5 @@
+#ifndef MAGNETOMETER
+#define  MAGNETOMETER
 #include <stdio.h>
 #include "pico/stdlib.h"
 #include "hardware/i2c.h"
@@ -93,22 +95,25 @@ int init_magnetometer(){
 
     configure(ACC_ADDR, ACC_CTRL_REG1, 0x57);
     configure(MAG_ADDR, MAG_MR_REG, 0x00);
+
+    sleep_ms(3000);
 }
+
 float get_heading(){
     Acc_Data acc_data;
-        acc_data.x = (int16_t)((read(ACC_ADDR, ACC_X_MSB) << 8) | read(ACC_ADDR, ACC_X_LSB));
-        acc_data.y = (int16_t)((read(ACC_ADDR, ACC_Y_MSB) << 8) | read(ACC_ADDR, ACC_Y_LSB));
-        acc_data.z = (int16_t)((read(ACC_ADDR, ACC_Z_MSB) << 8) | read(ACC_ADDR, ACC_Z_LSB));
+    acc_data.x = (int16_t)((read(ACC_ADDR, ACC_X_MSB) << 8) | read(ACC_ADDR, ACC_X_LSB));
+    acc_data.y = (int16_t)((read(ACC_ADDR, ACC_Y_MSB) << 8) | read(ACC_ADDR, ACC_Y_LSB));
+    acc_data.z = (int16_t)((read(ACC_ADDR, ACC_Z_MSB) << 8) | read(ACC_ADDR, ACC_Z_LSB));
 
-        // Extract and format the magnetometer data
-        Mag_Data mag_data;
-        mag_data.x = (int16_t)((read(MAG_ADDR, MAG_X_MSB) << 8) | read(MAG_ADDR, MAG_X_LSB));
-        mag_data.y = (int16_t)((read(MAG_ADDR, MAG_Y_MSB) << 8) | read(MAG_ADDR, MAG_Y_LSB));
-        mag_data.z = (int16_t)((read(MAG_ADDR, MAG_Z_MSB) << 8) | read(MAG_ADDR, MAG_Z_LSB));
+    // Extract and format the magnetometer data
+    Mag_Data mag_data;
+    mag_data.x = (int16_t)((read(MAG_ADDR, MAG_X_MSB) << 8) | read(MAG_ADDR, MAG_X_LSB));
+    mag_data.y = (int16_t)((read(MAG_ADDR, MAG_Y_MSB) << 8) | read(MAG_ADDR, MAG_Y_LSB));
+    mag_data.z = (int16_t)((read(MAG_ADDR, MAG_Z_MSB) << 8) | read(MAG_ADDR, MAG_Z_LSB));
 
-        Calibrated_Data calibrated_data = calibrate(mag_data.x, mag_data.y, mag_data.z);
+    Calibrated_Data calibrated_data = calibrate(mag_data.x, mag_data.y, mag_data.z);
 
-        float heading = atan2(calibrated_data.y, calibrated_data.x) * 180 / M_PI;
+    float heading = atan2(calibrated_data.y, calibrated_data.x) * 180 / M_PI;
 }
 #ifdef TEST_MAGNETOMETER
 int main() {
@@ -151,4 +156,5 @@ int main() {
 
     return 0;
 }
+#endif
 #endif

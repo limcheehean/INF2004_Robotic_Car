@@ -1,13 +1,11 @@
 
-#include "FreeRTOS.h"
-#include "task.h"
-#include "queue.h"
 #include "decider.h"
-#include "driver/encoder/wheel_encoder.h"
-#include "driver/magnetnometer/magnetnometer.c"
-
+#include "timers.h"
 TaskHandle_t g_decider_task_handle;
 QueueHandle_t g_decider_message_queue;
+
+/* An array to hold handles to the created timers. */
+TimerHandle_t xTimers[ NUM_TIMERS ];
 
 void message_self(int type, int data){
     DeciderMessage_t message;
@@ -16,17 +14,22 @@ void message_self(int type, int data){
     xQueueSendToFrontFromISR(g_decider_message_queue,&message, 0);
 }
 
-void check_wall_isr(alarm_id_t id, void *user_data){
-    message_self(D_WALL_TESTING, 1 );
+void check_wall_callback(TimerHandle_t xTimer){
+    message_self(D_NOT_SIDEWALL, 1 );
 }
 
-void check_barcode_isr(alarm_id_t id, void *user_data){
-    message_self(D_BARCODE_TESTING, 1 );
+void check_barcode_callback(TimerHandle_t xTimer){
+    message_self(D_NOT_BARCODE, 1 );
 }
 
-void turning_isr(repeating_timer_t *rt){
+void stop_reversing_callback(TimerHandle_t xTimer){
+    message_self(D_STOP_REVERSING, 1);
+}
+
+void turning_callback(TimerHandle_t xTimer){
     //get heading
-    message_self((int)get_heading(), get_heading());
+    message_self(D_TURNING, (int)get_heading());
+    turn_left(0.5);
 }
 
 
@@ -34,11 +37,16 @@ void decider_task( void *pvParameters ) {
 
     bool is_reading = false;
     DeciderMessage_t message;
-    int left_wall_sensor = 0;
-    int right_wall_sensor = 0;
+    int left_wall_on = 0;
+    int right_wall_on = 0;
 
     int target_heading = 0;
-    repeating_timer_t rotate_timer;
+    float speed = 0.5;
+    bool i_am_turning = 0;
+    TimerHandle_t rotate_timer = xTimerCreate ( "Rotating!... ", pdMS_TO_TICKS(100), pdTRUE,( void * ) 0,turning_callback);;
+    TimerHandle_t reversing_stop_timer = xTimerCreate ( "Stop reversing in...", pdMS_TO_TICKS(1000), pdFALSE,( void * ) 0,stop_reversing_callback);
+    TimerHandle_t check_wall_timer = xTimerCreate("check if wall for ...", pdMS_TO_TICKS(150), pdFALSE, (void *) 0, check_wall_callback); //(150, check_wall_isr, 0, true);
+    TimerHandle_t check_barcode_timer = xTimerCreate("check if barcode for ...", pdMS_TO_TICKS(150), pdFALSE, (void *) 0, check_barcode_callback); //add_alarm_in_ms(100, check_barcode_isr, 0 ,true);
     
     bool calibrated = 0; /* Need to do a 360 spin */
     bool wall_or_bc_test = 0; /* Is the wall in front wall or barcode? */
@@ -46,38 +54,97 @@ void decider_task( void *pvParameters ) {
 
     for (;;){
         if (xQueueReceive(g_decider_message_queue, &message, portMAX_DELAY) == pdPASS){
-            if (message.type == D_TURNING){
-                if (message.data > target_heading){
-                    cancel_repeating_timer( &rotate_timer ); 
-                }
-            }
-            /* Keep driving forward */
-            if (message.type == D_WALL_LEFT_EVENT){
-                /* Currently facing wall */
-                left_wall_sensor = 1;
-                if (right_wall_sensor){
-                    add_alarm_in_ms(100, check_wall_isr, 0, true);
-                    // Measure angle?
-                    // Turn right!
-                    
-                }
-                else {
+            
+            switch (message.type){
+                case D_TURNING:
+                    if (message.data > target_heading){
+                        xTimerStop(rotate_timer, portMAX_DELAY ); 
+                        stop();
+                    }
+                    break;
 
-                }
+                /* sidewall, time to rotate*/
+                case D_NOT_SIDEWALL:
+                    if (left_wall_on || right_wall_on){
+                        target_heading = get_heading() + 45;
+                        xTimerReset(rotate_timer, portMAX_DELAY);
+                    }
+                    break;
+                case D_NOT_BARCODE:
+                    stop();
+                    if (left_wall_on || right_wall_on){
+                        target_heading = get_heading() + 45;
+                        xTimerReset(rotate_timer, portMAX_DELAY);
+                    }
+                    break;
+                case D_ULTRASONIC_EVENT:
+                    stop();
+                    move_backward(speed, speed);
+                    //printf("Reversing\n");
+                    //add_alarm_in_ms(500, stop_reversing_isr, NULL, &reversing_stop_alarm);
+                    xTimerReset(reversing_stop_timer,portMAX_DELAY);
+                    break;
+                case D_STOP_REVERSING:
+                    xTimerStop(reversing_stop_timer, portMAX_DELAY);
+                    stop();
+                    //printf("Not reversing\n");
+                    break;
+
+                    //rotate??
+                /* Keep driving forward */
+                case D_WALL_LEFT_EVENT: 
+                case D_WALL_RIGHT_EVENT:
+                /* Currently facing wall */
+                    if (i_am_turning) break;
+                    /* Bit set */
+                    if (message.type == D_WALL_LEFT_EVENT) {
+                        if (message.data) left_wall_on = 1;
+                        else left_wall_on = 0;
+                    }
+                    else{
+                        if (message.data) right_wall_on = 1;
+                        else right_wall_on = 0;
+                    }
+                    printf(" event data: %d, %d|\n", left_wall_on, right_wall_on);
+
+                    /* One white min */
+                    if (! (left_wall_on && right_wall_on )){
+                        xTimerStop(check_barcode_timer, portMAX_DELAY);
+                        xTimerReset(check_wall_timer, portMAX_DELAY);
+                        // Measure angle?
+                        // Turn right!
+                    }
+                    else{
+                        // check barcode
+                        xTimerStop(check_wall_timer, portMAX_DELAY);
+                        xTimerReset(check_barcode_timer, portMAX_DELAY); //= //add_alarm_in_ms(100, check_barcode_isr, 0 ,true);
+                    }
+                    break;
+                
             }
         }
+        
     }
-    
-    vTaskDelete(NULL); 
+    //vTaskDelete(NULL); 
 }
 
 void init_decider(){
     g_decider_message_queue = xQueueCreate(30, sizeof(DeciderMessage_t));
+    xTaskCreate(decider_task,
+                "Decider Task",
+                configMINIMAL_STACK_SIZE,
+                ( void * ) &g_decider_message_queue, // Can try experimenting with parameter
+                tskIDLE_PRIORITY,
+                &g_decider_task_handle);
+    
+    printf("Decider initialized\n");
 }
 
 #ifdef DECIDER_TEST
 
 int main(){
-    
+    init_decider();
+    vTaskStartScheduler(); /* NEED THIS */
+    while(true);
 }
 #endif

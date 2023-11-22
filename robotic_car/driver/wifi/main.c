@@ -5,7 +5,7 @@
 #include "lwip/apps/httpd.h"
 #include "ssi.h"
 #include "cgi.h"
-#include "wifi_task_message_buffer.h"
+#include "wifi_task_message_receiver.c"
 #define MAX_MESSAGES 100
 
 #ifndef PICO_MAX_SHARED_IRQ_HANDLERS

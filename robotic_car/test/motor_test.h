@@ -91,4 +91,7 @@ void init_motor(){
     // Configure wheel encoder
     init_wheel_encoder(LEFT_ENCODER_INPUT,
                        RIGHT_ENCODER_INPUT);
+
+    
+    printf("Motor initialized\n");
 }

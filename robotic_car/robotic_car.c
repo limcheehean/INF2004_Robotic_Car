@@ -6,12 +6,23 @@
 
 #include "../wifi/main.c"
 
+#include "driver/ir_sensor/wall/wall_interrupt.c"
+#define DECIDER_INCLUDED
+#include "driver/ultra_sensor/ultra_sensor.c"
+
+
 void generic_isr(uint gpio, uint32_t events) {
     if (gpio == BARCODE_PIN){
         barcode_edge_irq(gpio, events);
     }
     else if (gpio == LEFT_ENCODER_INPUT || gpio == RIGHT_ENCODER_INPUT){
         wheel_moved_isr(gpio, events);
+    }
+    else if (gpio == LEFT_IR_PIN || gpio == RIGHT_IR_PIN){
+        wall_edge_irq(gpio, events);
+    }
+    else if (gpio == ULTRA_ECHO_PIN){
+        echo_pin_isr(gpio, events);
     }
     
 
@@ -28,6 +39,15 @@ int main()
 
     barcode_driver_init();
 
+    //init_magnetometer();
+
+    //printf("Magnetometer initialized\n");
+
+    init_ultrasonic();
+    
+    init_decider();
+
+
     //float g_shared_dist_buffer = 13212.231;
     //gpio_init(27);
     //gpio_set_dir(27, GPIO_IN);
@@ -41,13 +61,26 @@ int main()
     gpio_set_irq_enabled(BARCODE_PIN, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true);
     gpio_set_irq_enabled(LEFT_ENCODER_INPUT, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true);
     gpio_set_irq_enabled(RIGHT_ENCODER_INPUT, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true);
+    gpio_set_irq_enabled(LEFT_IR_PIN, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true);
+    gpio_set_irq_enabled(RIGHT_IR_PIN, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true);
+    gpio_set_irq_enabled(ULTRA_ECHO_PIN, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true);
 
     gpio_set_irq_callback(&generic_isr);
 
-    cgi_init();
 
+    printf("GPIO irq intialized\n");
+    cgi_init();
+    printf("cgi initialized\n");
+
+    move_forward(0.5,0.75);
+
+    printf("Move forwards!\n");
+
+
+    
     vTaskStartScheduler(); /* NEED THIS */
 
-    while (true);
+    while (true) {
+    }
 
 }
