@@ -5,7 +5,7 @@
 #include "lwip/apps/httpd.h"
 #include "ssi.h"
 #include "cgi.h"
-#include "wifi_task_message_buffer.h"
+#include "wifi_task_message_receiver.c"
 
 
 #ifndef PICO_MAX_SHARED_IRQ_HANDLERS
@@ -55,7 +55,9 @@ int main_2()
     ssi_init();
     printf("SSI Handler initialised\n");
     
-    printf("Initialized wifi task queue");
+    printf("Initialized wifi task queue\n");
+
+    printf("Wifi driver intitialized\n");
 //    cgi_init();
 //    printf("CGI Handler initialised\n");
     

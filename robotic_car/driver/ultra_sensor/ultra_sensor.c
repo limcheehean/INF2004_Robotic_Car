@@ -3,8 +3,21 @@
 #include "hardware/uart.h"
 #include "hardware/gpio.h"
 
-#define NUM_READINGS 5  // Number of readings to average
-#define MIN_DISTANCE_CM 3   // Minimum distance (in centimeters)
+#ifndef DECIDER_INCLUDED
+#define DECIDER_INCLUDED
+#include "../../decider.c"
+#endif
+
+/**
+ * Pin 13 - trigger
+ * Pin 14 - echo
+ * **/
+
+#define ULTRA_TRIGGER_PIN 14
+#define ULTRA_ECHO_PIN 15
+
+#define NUM_READINGS 3  // Number of readings to average
+#define MIN_DISTANCE_CM 6   // Minimum distance (in centimeters)
 #define MAX_DISTANCE_CM 100 // Maximum distance (in centimeters)
 
 uint trigPin = 0;
@@ -21,10 +34,10 @@ float R = 0.1;      // Measurement noise covariance
 
 void setupUltrasonicPins(uint trigPin, uint echoPin)
 {
-    gpio_init(trigPin);
-    gpio_init(echoPin);
-    gpio_set_dir(trigPin, GPIO_OUT);
-    gpio_set_dir(echoPin, GPIO_IN);
+    gpio_init(ULTRA_TRIGGER_PIN);
+    gpio_init(ULTRA_ECHO_PIN);
+    gpio_set_dir(ULTRA_TRIGGER_PIN, GPIO_OUT);
+    gpio_set_dir(ULTRA_ECHO_PIN, GPIO_IN);
 }
 
 // Kalman Filter update function from online
@@ -43,9 +56,11 @@ void kalmanFilter(float z) {
 float distance_readings[NUM_READINGS];
 int current_reading = 0;
 
+DeciderMessage_t us_decider_message;
+BaseType_t holder;
 void echo_pin_isr(uint gpio, uint32_t events) {
-    if (gpio == 1) {
-        if (gpio_get(echoPin)) {
+    if (gpio == ULTRA_ECHO_PIN) {
+        if (gpio_get(ULTRA_ECHO_PIN)) {
             // start timer
             start_time = time_us_32();
         } 
@@ -76,22 +91,52 @@ void echo_pin_isr(uint gpio, uint32_t events) {
 
             //if else to print distance. Can use this to move vehicle back.
             if (moving_average >= MAX_DISTANCE_CM ) {
-                printf("\n Too Far!! Distance >%d cm", MAX_DISTANCE_CM);
+                //printf("\n Too Far!! Distance >%d cm", MAX_DISTANCE_CM);
             }
             else if (moving_average <= MIN_DISTANCE_CM) {
-                printf("\n Too Near!! Distance < %d cm", MIN_DISTANCE_CM);
+                #ifndef ULTRASONIC_TEST
+                //printf("\n Too Near!! Distance < %d cm", MIN_DISTANCE_CM);
+                us_decider_message.type = D_ULTRASONIC_EVENT;
+                us_decider_message.data = 1;
+                xQueueSendFromISR(g_decider_message_queue, &us_decider_message, &holder);
+                #endif
             }
             else {
-                printf("\n current distance: %.2f cm", moving_average);
+                //printf("\n current distance: %.2f cm", moving_average);
             }
         }
     }
 }
 
+void ultrasonic_task( void *pvParameters ) {
+
+    for (;;){
+        gpio_put(ULTRA_TRIGGER_PIN, 1);  // Set the trigger pin high
+        vTaskDelay( pdMS_TO_TICKS(1) /10);          // Keep it high for at least 10 microseconds
+        gpio_put(ULTRA_TRIGGER_PIN, 0);  // Set the trigger pin low
+        vTaskDelay( pdMS_TO_TICKS(10)); //sleep
+    }
+
+}
+
+TaskHandle_t ultrasonic_task_handle;
+void init_ultrasonic(){
+    setupUltrasonicPins(trigPin, echoPin);
+    
+    xTaskCreate(ultrasonic_task,
+                "Ultrasonic Task",
+                configMINIMAL_STACK_SIZE,
+                ( void * ) 0, // Can try experimenting with parameter
+                tskIDLE_PRIORITY,
+                &ultrasonic_task_handle);
+    printf("Ultrasonic initialized\n");
+}
+
+#ifdef ULTRASONIC_TEST
 int main()
 {
     stdio_init_all();
-    setupUltrasonicPins(trigPin, echoPin);
+    setupUltrasonicPins(ULTRA_TRIGGER_PIN, ULTRA_ECHO_PIN);
 
     // Initialize the circular buffer
     for (int i = 0; i < NUM_READINGS; i++) {
@@ -99,13 +144,14 @@ int main()
     }
 
     // Configure the echo pin for GPIO interrupts
-    gpio_set_irq_enabled_with_callback(echoPin, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &echo_pin_isr);
+    gpio_set_irq_enabled_with_callback(ULTRA_ECHO_PIN, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &echo_pin_isr);
 
     while (true)
     {
-        gpio_put(trigPin, 1);  // Set the trigger pin high
+        gpio_put(ULTRA_TRIGGER_PIN, 1);  // Set the trigger pin high
         sleep_us(100);          // Keep it high for at least 10 microseconds
-        gpio_put(trigPin, 0);  // Set the trigger pin low
+        gpio_put(ULTRA_TRIGGER_PIN, 0);  // Set the trigger pin low
         sleep_us(150000); //sleep
     }
 }
+#endif

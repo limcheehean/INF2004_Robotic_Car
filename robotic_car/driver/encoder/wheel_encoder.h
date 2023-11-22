@@ -1,5 +1,7 @@
 
 
+#ifndef WHEEL_ENCODER_HEADER
+#define WHEEL_ENCODER_HEADER
 #include <hardware/gpio.h>
 #include <pico/time.h>
 #include "pico/stdlib.h"
@@ -64,7 +66,7 @@ void wheel_moved_isr(uint gpio, uint32_t events) {
     encoder->current_speed = /* 33.2f */ 20.4f / 40 / ((float)(current_time - encoder->last_time) / 1000000.0f);
     encoder->last_time = current_time;
 
-    printf("Encoder: %s, Distance: %.2f cm, Speed: %.2f cm/s\n", encoder->side, encoder->total_distance, encoder->current_speed);
+    //printf("Encoder: %s, Distance: %.2f cm, Speed: %.2f cm/s\n", encoder->side, encoder->total_distance, encoder->current_speed);
 
 }
 
@@ -90,3 +92,5 @@ void init_wheel_encoder(int left_encoder_pin, int right_encoder_pin) {
     gpio_set_irq_enabled_with_callback(right_encoder_pin, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &wheel_moved_isr);
 
 }
+
+#endif

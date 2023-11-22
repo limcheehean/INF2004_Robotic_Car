@@ -18,9 +18,10 @@ typedef struct {
 
 } WifiTaskMessage_t;
 
-extern QueueHandle_t g_wifi_task_message_queue;
-extern WifiTaskMessage_t currentMessage;
+QueueHandle_t g_wifi_task_message_queue;
+WifiTaskMessage_t currentMessage;
 //extern SemaphoreHandle_t wifi_data_mutex;
-extern int wifi_shared_type;
-extern void wifi_task_message_receive_task(void *pvParameters);
+int wifi_shared_type;
+void wifi_task_message_receive_task(void *pvParameters);
+void init_wifi_task_message_receive();
 #endif /* WIFI_TASK_MESSAGE_BUFFER_H */

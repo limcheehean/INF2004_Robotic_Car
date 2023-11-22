@@ -38,7 +38,7 @@ const char *cgi_move_handler(int iIndex, int iNumParams, char *pcParam[], char *
         {
             printf("[FORWARD] Left: %.2f, Right: %.2f\n", left_power, right_power);
             // move_forward(left_power, right_power);
-            false_move_forward(left_power, right_power);
+            move_forward(left_power, right_power);
         }
         else if (strcmp(pcValue[0], "down") == 0)
         {

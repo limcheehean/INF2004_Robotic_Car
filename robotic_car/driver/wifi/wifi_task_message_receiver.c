@@ -44,6 +44,8 @@ void init_wifi_task_message_receive(){
                 ( void * ) 0, // Can try experimenting with parameter
                 tskIDLE_PRIORITY,
                 &g_wifi_task_message_task_handle);
+
+    printf("Wifi task message receive init \n");
     
 }
 

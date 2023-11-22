@@ -6,6 +6,7 @@ void barcode_driver_init(){
 
     g_barcode_interpret_queue = xQueueCreate(10, sizeof(BarcodeISRData_t));
     init_barcode_interpret_task(); 
+    printf("Barcode driver intialized\n");
     
 }
 

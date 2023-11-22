@@ -15,8 +15,8 @@
 #define RIGHT_MOTOR_PWM 1
 #define LEFT_MOTOR_FORWARD 2
 #define LEFT_MOTOR_BACKWARD 3
-#define RIGHT_MOTOR_FORWARD 5
-#define RIGHT_MOTOR_BACKWARD 4
+#define RIGHT_MOTOR_FORWARD 4
+#define RIGHT_MOTOR_BACKWARD 5
 #define LEFT_ENCODER_INPUT 6
 #define RIGHT_ENCODER_INPUT 7
 #define LEFT_ENCODER_POWER 28
@@ -91,4 +91,7 @@ void init_motor(){
     // Configure wheel encoder
     init_wheel_encoder(LEFT_ENCODER_INPUT,
                        RIGHT_ENCODER_INPUT);
+
+    
+    printf("Motor initialized\n");
 }
