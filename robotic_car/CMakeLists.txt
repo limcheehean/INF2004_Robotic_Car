@@ -139,7 +139,7 @@ execute_process(COMMAND
     WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/makefsdata.py
 )
 
-add_executable(pico_w_webserver1
+add_executable(pico_w_webserver
         driver/wifi/main.c
         driver/wifi/wifi_task_message_receiver.c
 )
@@ -150,7 +150,7 @@ add_executable(pico_w_webserver1
 #        LWIP_TIMEVAL_PRIVATE=0
 #        )
 
-target_include_directories(pico_w_webserver1 PRIVATE
+target_include_directories(pico_w_webserver PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
     ${CMAKE_CURRENT_LIST_DIR}/driver/wifi
 #    ${CMAKE_CURRENT_LIST_DIR}/../..
@@ -158,7 +158,7 @@ target_include_directories(pico_w_webserver1 PRIVATE
 
 )
 
-target_link_libraries(pico_w_webserver1
+target_link_libraries(pico_w_webserver
     pico_cyw43_arch_lwip_threadsafe_background
     pico_stdlib
     pico_lwip_iperf
@@ -166,16 +166,17 @@ target_link_libraries(pico_w_webserver1
     pico_lwip_http
     pico_lwip_iperf
     hardware_adc
+    hardware_pwm
 )
 
-target_compile_definitions(pico_w_webserver1 PRIVATE
+target_compile_definitions(pico_w_webserver PRIVATE
         
         )
 
-pico_enable_stdio_usb(pico_w_webserver1 TRUE)
-pico_enable_stdio_uart(pico_w_webserver1 FALSE)
+pico_enable_stdio_usb(pico_w_webserver TRUE)
+pico_enable_stdio_uart(pico_w_webserver FALSE)
 
-pico_add_extra_outputs(pico_w_webserver1)
+pico_add_extra_outputs(pico_w_webserver)
 
 
 # decider
