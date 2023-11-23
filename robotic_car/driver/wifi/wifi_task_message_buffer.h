@@ -1,6 +1,7 @@
 // wifi_task_message_buffer.h
 #ifndef WIFI_TASK_MESSAGE_BUFFER_H
 #define WIFI_TASK_MESSAGE_BUFFER_H
+#include <sys/cdefs.h>
 
 #include "pico/stdlib.h"
 #include "FreeRTOS.h"
@@ -8,6 +9,7 @@
 #include "queue.h"
 #include "semphr.h"
 #include "../ir_sensor/barcode_subcomponents/barcode_isr_data.h"
+#include <task.h>
 
 #define WIFI_TASK_MESSAGE_SIZE 30
 #define MAX_MESSAGES 100
@@ -20,11 +22,11 @@ typedef struct
 
 } WifiTaskMessage_t;
 
-QueueHandle_t g_wifi_task_message_queue;
-WifiTaskMessage_t currentMessage;
+extern QueueHandle_t g_wifi_task_message_queue;
+extern WifiTaskMessage_t currentMessage;
 extern WifiTaskMessage_t totalMessage;
-int wifi_shared_type;
-void wifi_task_message_receive_task(void *pvParameters);
+extern int wifi_shared_type;
+extern void wifi_task_message_receive_task(void *pvParameters);
 extern void wifi_task_message_receive_task_testData(void *pvParameters);
 
 extern char concatenatedMessages[WIFI_TASK_MESSAGE_SIZE * MAX_MESSAGES + 1];
@@ -33,5 +35,5 @@ extern QueueHandle_t g_update_ssi_queue;
 extern TaskHandle_t g_wifi_task_message_task_handle;
 extern TaskHandle_t g_wifi_task_message_task_handle_test;
 
-void init_wifi_task_message_receive();
+//void init_wifi_task_message_receive();
 #endif /* WIFI_TASK_MESSAGE_BUFFER_H */

@@ -5,7 +5,8 @@
 #include "lwip/apps/httpd.h"
 #include "ssi.h"
 #include "cgi.h"
-#include "wifi_task_message_receiver.c"
+//#include "wifi_task_message_receiver.c"
+#include "wifi_task_message_buffer.h"
 #define MAX_MESSAGES 100
 
 #ifndef PICO_MAX_SHARED_IRQ_HANDLERS
@@ -15,8 +16,8 @@
 // WIFI Credentials - take care if pushing to github!
 //const char WIFI_SSID[] = "POCO F4 GT"; //20V3
 //const char WIFI_PASSWORD[] = "qqsypbcppz7dt4m";
-const char WIFI_SSID[] = "AndroidAP_2237";
-const char WIFI_PASSWORD[] = "7322password";
+const char WIFI_SSID[] = "Thrith";
+const char WIFI_PASSWORD[] = "reness10";
 // Kanagarani2!
 // S20,reness10
 // ravirani, kanagarani18
@@ -78,6 +79,7 @@ int main_2()
 
 #ifndef DISABLE_WIFI_MAIN
 int main(){
+    main_2();
     vTaskStartScheduler();
 
     while (1)
