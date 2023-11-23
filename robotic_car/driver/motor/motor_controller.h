@@ -3,8 +3,8 @@
 #ifndef MOTOR_CONTROLLER
 #define MOTOR_CONTROLLER
 
-#define KP 50.0f
-#define KI 0.0f
+#define KP 75.0f
+#define KI 0.875f
 #define KD 0.0f
 
 #include <hardware/pwm.h>
