@@ -30,14 +30,14 @@ void wifi_task_message_receive_task(void *pvParameters)
             {
                 // Concatenate currentMessage.message to totalMessage.message
                 strncat(totalMessage.message, currentMessage.message, WIFI_TASK_MESSAGE_SIZE - strlen(totalMessage.message) - 1);
-                printf("Concatenated message: %s\n", totalMessage.message);
+                //printf("Concatenated message: %s\n", totalMessage.message);
             }
             else
             {
-                printf("Not enough space to concatenate the message.\n");
+                //printf("Not enough space to concatenate the message.\n");
             }
 
-            xQueueSend(g_concatenatedMessagesQueue, &totalMessage, 0);
+            //xQueueSend(g_concatenatedMessagesQueue, &totalMessage, 0);
         }
     }
 

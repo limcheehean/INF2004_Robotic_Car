@@ -12,8 +12,8 @@ const char *ssi_tags[] = {"volt", "temp", "type", "message"};
 
 u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen)
 {
-    printf("Type: %d\n", currentMessage.type);
-    printf("Concatenate: %s,", totalMessage.message);
+    //printf("Type: %d\n", currentMessage.type);
+    //printf("Concatenate: %s,", totalMessage.message);
     size_t printed;
     switch (iIndex)
     {
