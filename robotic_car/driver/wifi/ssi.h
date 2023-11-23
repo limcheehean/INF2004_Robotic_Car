@@ -37,8 +37,15 @@ u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen)
     break;
     case 3:
     {
-        printed = snprintf(pcInsert, iInsertLen, "%s", totalMessage.message);
+        if (xQueueReceive(g_concatenatedMessagesQueue, &totalMessage, 0) == pdTRUE)
+        {
 
+            printed = snprintf(pcInsert, iInsertLen, "%s", totalMessage.message);
+        }
+        else
+        {
+            printed = snprintf(pcInsert, iInsertLen, "Queue reception failed");
+        }
     }
     break;
     default:
