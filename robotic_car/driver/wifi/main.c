@@ -68,12 +68,12 @@ int main_2()
         printf("Error creating g_concatenatedMessagesQueue\n");
     }
 
-    #ifndef DISABLE_WIFI_MAIN
-    if (xTaskCreate(wifi_task_message_receive_task_testData, "Wifi totalMessage Task", configMINIMAL_STACK_SIZE, (void *)0, tskIDLE_PRIORITY, &g_wifi_task_message_task_handle_test) != pdPASS)
-    {
-        printf("Error creating wifi_task_message_receive_task_test\n");
-    }
-    #endif
+    // #ifndef DISABLE_WIFI_MAIN
+    // if (xTaskCreate(wifi_task_message_receive_task_testData, "Wifi totalMessage Task", configMINIMAL_STACK_SIZE, (void *)0, tskIDLE_PRIORITY, &g_wifi_task_message_task_handle_test) != pdPASS)
+    // {
+    //     printf("Error creating wifi_task_message_receive_task_test\n");
+    // }
+    // #endif
 }
 
 #ifndef DISABLE_WIFI_MAIN

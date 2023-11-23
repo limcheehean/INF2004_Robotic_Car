@@ -210,8 +210,8 @@ void interpret_barcode( uint16_t barcode_buffer, bool * next_is_quiet, bool * re
     
         if (is_start_stop){
 
-            new_message.message[0] = '*';
-            xQueueSend(g_wifi_task_message_queue, &new_message, 0); 
+            //new_message.message[0] = '*';
+            //xQueueSend(g_wifi_task_message_queue, &new_message, 0); 
 
             #ifndef NOT_DEBUGGING
             printf("\n<BARCODE START>\n\n");
@@ -232,8 +232,9 @@ void interpret_barcode( uint16_t barcode_buffer, bool * next_is_quiet, bool * re
             barcode_buffer = reverse_binary(barcode_buffer, BARCODE_BUFFER_SIZE);
         } 
         if ((barcode_buffer & BC_START_STOP) == BC_START_STOP){
-            new_message.message[0] = '*';
-            xQueueSend(g_wifi_task_message_queue, &new_message, 0); 
+            
+            //new_message.message[0] = '*';
+            //xQueueSend(g_wifi_task_message_queue, &new_message, 0); 
             #ifndef NOT_DEBUGGING
             printf("\n<BARCODE STOP>\n\n");
             #endif
