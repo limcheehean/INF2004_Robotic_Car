@@ -45,7 +45,7 @@ int main()
 
     init_ultrasonic();
     
-    init_decider();
+    //init_decider();
 
 
     //float g_shared_dist_buffer = 13212.231;
@@ -72,7 +72,7 @@ int main()
     cgi_init();
     printf("cgi initialized\n");
 
-    move_forward(0.5,0.65);
+    move_forward(9000,9000);
 
     printf("Move forwards!\n");
 

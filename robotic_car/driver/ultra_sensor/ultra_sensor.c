@@ -95,7 +95,7 @@ void echo_pin_isr(uint gpio, uint32_t events) {
             }
             else if (moving_average <= MIN_DISTANCE_CM) {
                 #ifndef ULTRASONIC_TEST
-                //printf("\n Too Near!! Distance < %d cm", MIN_DISTANCE_CM);
+                printf("\n Too Near!! Distance < %d cm", MIN_DISTANCE_CM);
                 us_decider_message.type = D_ULTRASONIC_EVENT;
                 us_decider_message.data = 1;
                 xQueueSendFromISR(g_decider_message_queue, &us_decider_message, &holder);
