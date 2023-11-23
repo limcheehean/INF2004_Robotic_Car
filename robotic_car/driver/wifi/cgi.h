@@ -66,6 +66,33 @@ const char *cgi_move_handler(int iIndex, int iNumParams, char *pcParam[], char *
     return "successful";
 }
 
+const char *cgi_demo_handler(int iIndex, int iNumParams, char *pcParam[], char *pcValue[]) {
+
+    printf("Demo instruction received\n");
+
+    if (strcmp(pcParam[0], "function") == 0)
+    {
+        if (strcmp(pcValue[0], "straight_path") == 0)
+        {
+            printf("Demonstrating straight path\n");
+        }
+        else if (strcmp(pcValue[0], "turn_left_right") == 0)
+        {
+            printf("Demonstrating turn left right\n");
+        }
+        else if (strcmp(pcValue[0], "barcode") == 0)
+        {
+            printf("Demonstrating barcode\n");
+        }
+        else if (strcmp(pcValue[0], "obstacle") == 0)
+        {
+            printf("Demonstrating obstacle\n");
+
+        }
+    }
+    return "successful";
+}
+
 
 // tCGI Struct
 // Fill this with all of the CGI requests and their respective handlers
@@ -74,11 +101,12 @@ static const tCGI cgi_handlers[] = {
     //     // Html request for "/led.cgi" triggers cgi_handler
     //     "/led.cgi", cgi_led_handler
     // },
-    {"/move.cgi", cgi_move_handler}
+    {"/move.cgi", cgi_move_handler},
+    {"/demo.cgi", cgi_demo_handler}
 };
 
 void cgi_init(void)
 {
-    http_set_cgi_handlers(cgi_handlers, 1);
+    http_set_cgi_handlers(cgi_handlers, 2);
 }
 #endif
