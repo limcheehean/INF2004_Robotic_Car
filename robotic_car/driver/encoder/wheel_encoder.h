@@ -65,9 +65,11 @@ void wheel_moved_isr(uint gpio, uint32_t events) {
     struct wheel_encoder * encoder = gpio == data->left_encoder.pin ? &data->left_encoder : &data->right_encoder;
 
     encoder->ticks++;
-    printf("Interrupt %d\n", encoder->ticks);
-    if (encoder->ticks >= encoder->ticks_to_stop)
+    printf("Interrupt %d, %d\n", encoder->ticks, encoder->ticks_to_stop);
+    if (encoder->ticks >= encoder->ticks_to_stop){
+        printf("STOP!\n");
         stop();
+    }
 //    encoder->total_distance = (float)encoder->ticks / 40 * 20.4f;//33.2f;
 //    encoder->current_speed = /* 33.2f */ 20.4f / 40 / ((float)(current_time - encoder->last_time) / 1000000.0f);
 //    encoder->last_time = current_time;

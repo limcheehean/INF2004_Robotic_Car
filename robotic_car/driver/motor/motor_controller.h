@@ -189,22 +189,27 @@ void set_wheel_speed(float left_speed, float right_speed) {
 //    config->right_motor.pwm_level = right_speed * 5000;
     config->left_motor.pwm_level = left_speed;
     config->right_motor.pwm_level = right_speed;
+    pwm_set_chan_level(config->right_motor.slice, config->right_motor.channel, right_speed);
 
-    if (left_speed == 0 && right_speed == 0) {
-        pwm_set_chan_level(config->right_motor.slice, config->right_motor.channel, 0);
-        return;
-    }
-    if (left_speed == 0) {
-        pwm_set_chan_level(config->left_motor.slice, config->left_motor.channel, 0);
-        pwm_set_chan_level(config->right_motor.slice, config->right_motor.channel, 20000);
-    } else if (right_speed == 0) {
-        pwm_set_chan_level(config->left_motor.slice, config->left_motor.channel, 20000);
-        pwm_set_chan_level(config->right_motor.slice, config->right_motor.channel, 0);
-    } else {
-        pwm_set_chan_level(config->right_motor.slice, config->right_motor.channel, 20000);
-        pwm_set_chan_level(config->left_motor.slice, config->left_motor.channel, 20000);
-    }
-    add_alarm_in_ms(100, normalise_speed, NULL, false);
+    pwm_set_chan_level(config->left_motor.slice, config->left_motor.channel, left_speed);
+        
+    // if (left_speed == 0 && right_speed == 0) {
+    //     pwm_set_chan_level(config->right_motor.slice, config->right_motor.channel, 0);
+
+    //     pwm_set_chan_level(config->left_motor.slice, config->left_motor.channel, 0);
+    //     return;
+    // }
+    // if (left_speed == 0) {
+    //     pwm_set_chan_level(config->left_motor.slice, config->left_motor.channel, 0);
+    //     pwm_set_chan_level(config->right_motor.slice, config->right_motor.channel, 20000);
+    // } else if (right_speed == 0) {
+    //     pwm_set_chan_level(config->left_motor.slice, config->left_motor.channel, 20000);
+    //     pwm_set_chan_level(config->right_motor.slice, config->right_motor.channel, 0);
+    // } else {
+    //     pwm_set_chan_level(config->right_motor.slice, config->right_motor.channel, 20000);
+    //     pwm_set_chan_level(config->left_motor.slice, config->left_motor.channel, 20000);
+    // }
+    // add_alarm_in_ms(100, normalise_speed, NULL, false);
 }
 
 // Set direction for each wheel
