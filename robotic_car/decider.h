@@ -19,6 +19,7 @@
 #define D_TURNING 6
 #define D_NOT_SIDEWALL 7
 #define D_STOP_REVERSING 9
+#define D_TOGGLE_ULTRASONIC 10
 
 typedef struct {
     int type;

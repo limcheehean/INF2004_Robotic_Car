@@ -7,7 +7,7 @@ QueueHandle_t g_decider_message_queue;
 /* An array to hold handles to the created timers. */
 TimerHandle_t xTimers[ NUM_TIMERS ];
 
-void message_self(int type, int data){
+void message_decider(int type, int data){
     DeciderMessage_t message;
     message.type = type;
     message.data = data;
@@ -15,20 +15,20 @@ void message_self(int type, int data){
 }
 
 void check_wall_callback(TimerHandle_t xTimer){
-    message_self(D_NOT_SIDEWALL, 1 );
+    message_decider(D_NOT_SIDEWALL, 1 );
 }
 
 void check_barcode_callback(TimerHandle_t xTimer){
-    message_self(D_NOT_BARCODE, 1 );
+    message_decider(D_NOT_BARCODE, 1 );
 }
 
 void stop_reversing_callback(TimerHandle_t xTimer){
-    message_self(D_STOP_REVERSING, 1);
+    message_decider(D_STOP_REVERSING, 1);
 }
 
 void turning_callback(TimerHandle_t xTimer){
     //get heading
-    message_self(D_TURNING, (int)get_heading());
+    message_decider(D_TURNING, (int)get_heading());
     turn_left(0.5);
 }
 
@@ -36,6 +36,7 @@ void turning_callback(TimerHandle_t xTimer){
 void decider_task( void *pvParameters ) {
 
     bool is_reading = false;
+    bool ultrasonic_enabled = true;
     DeciderMessage_t message;
     int left_wall_on = 0;
     int right_wall_on = 0;
@@ -78,12 +79,18 @@ void decider_task( void *pvParameters ) {
                     }
                     break;
                 case D_ULTRASONIC_EVENT:
-                    stop();
-                    move_backward(speed, speed);
-                    //printf("Reversing\n");
-                    //add_alarm_in_ms(500, stop_reversing_isr, NULL, &reversing_stop_alarm);
-                    xTimerReset(reversing_stop_timer,portMAX_DELAY);
+                    if (ultrasonic_enabled){
+                        stop();
+                        move_backward(speed, speed);
+                        //printf("Reversing\n");
+                        //add_alarm_in_ms(500, stop_reversing_isr, NULL, &reversing_stop_alarm);
+                        xTimerReset(reversing_stop_timer,portMAX_DELAY);
+                    }
                     break;
+
+                case D_TOGGLE_ULTRASONIC:
+                    ultrasonic_enabled = !message.data;
+
                 case D_STOP_REVERSING:
                     xTimerStop(reversing_stop_timer, portMAX_DELAY);
                     stop();
