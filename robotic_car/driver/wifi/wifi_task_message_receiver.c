@@ -30,11 +30,11 @@ void wifi_task_message_receive_task(void *pvParameters)
             {
                 // Concatenate currentMessage.message to totalMessage.message
                 strncat(totalMessage.message, currentMessage.message, WIFI_TASK_MESSAGE_SIZE - strlen(totalMessage.message) - 1);
-                //printf("Concatenated message: %s\n", totalMessage.message);
+                printf("Concatenated message: %s\n", totalMessage.message);
             }
             else
             {
-                //printf("Not enough space to concatenate the message.\n");
+                printf("Not enough space to concatenate the message.\n");
             }
 
             xQueueSend(g_concatenatedMessagesQueue, &totalMessage, 0);
@@ -45,25 +45,25 @@ void wifi_task_message_receive_task(void *pvParameters)
     vTaskDelete(NULL);
 }
 
-// #ifndef DISABLE_WIFI_MAIN
-// void wifi_task_message_receive_task_testData(void *pvParameters)
-// {
+#ifndef DISABLE_WIFI_MAIN
+void wifi_task_message_receive_task_testData(void *pvParameters)
+{
 
-//     for (;;)
-//     {
-//         // Modify the message field before sending
-//         snprintf(currentMessage.message, WIFI_TASK_MESSAGE_SIZE, "H%d", currentMessage.type);
+    for (;;)
+    {
+        // Modify the message field before sending
+        snprintf(currentMessage.message, WIFI_TASK_MESSAGE_SIZE, "H%d", currentMessage.type);
 
-//         printf("Type: %d\n", currentMessage.type);
-//         printf("Message: %s\n", currentMessage.message);
+        printf("Type: %d\n", currentMessage.type);
+        printf("Message: %s\n", currentMessage.message);
 
-//         xQueueSend(g_wifi_task_message_queue, &currentMessage, 0);
-//         vTaskDelay(3000);
-//     }
+        xQueueSend(g_wifi_task_message_queue, &currentMessage, 0);
+        vTaskDelay(3000);
+    }
 
-//     vTaskDelete(NULL);
-// }
-// #endif
+    vTaskDelete(NULL);
+}
+#endif
 void init_wifi_intr_queue(QueueHandle_t *wifi_task_message_queue)
 {
     g_wifi_task_message_queue = *wifi_task_message_queue;
