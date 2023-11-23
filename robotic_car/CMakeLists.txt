@@ -7,6 +7,7 @@ add_executable(robotic_car
         driver/motor/motor_controller.h
         driver/encoder/wheel_encoder.h
         test/motor_test.h
+        demo/demo.c
 
 
         #driver/ir_sensor/wall/wall_interrupt.c
