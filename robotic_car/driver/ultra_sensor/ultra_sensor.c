@@ -95,12 +95,10 @@ void echo_pin_isr(uint gpio, uint32_t events) {
             }
             else if (moving_average <= MIN_DISTANCE_CM) {
                 #ifndef ULTRASONIC_TEST
-                printf("\n Too Near!! Distance < %d cm", MIN_DISTANCE_CM);
+                //printf("\n Too Near!! Distance < %d cm", MIN_DISTANCE_CM);
                 us_decider_message.type = D_ULTRASONIC_EVENT;
                 us_decider_message.data = 1;
                 xQueueSendFromISR(g_decider_message_queue, &us_decider_message, &holder);
-                #else
-                printf("\n Too Near!! Distance < %d cm", MIN_DISTANCE_CM);
                 #endif
             }
             else {
@@ -150,7 +148,6 @@ int main()
 
     while (true)
     {
-        printf("I am running!\n");
         gpio_put(ULTRA_TRIGGER_PIN, 1);  // Set the trigger pin high
         sleep_us(100);          // Keep it high for at least 10 microseconds
         gpio_put(ULTRA_TRIGGER_PIN, 0);  // Set the trigger pin low

@@ -67,24 +67,21 @@ void decider_task( void *pvParameters ) {
                 /* sidewall, time to rotate*/
                 case D_NOT_SIDEWALL:
                     if (left_wall_on || right_wall_on){
-                        // target_heading = get_heading() + 45;
-                        // xTimerReset(rotate_timer, portMAX_DELAY);
-                        turn_left_for_ticks(10000,20);
+                        target_heading = get_heading() + 45;
+                        xTimerReset(rotate_timer, portMAX_DELAY);
                     }
                     break;
                 case D_NOT_BARCODE:
                     stop();
                     if (left_wall_on || right_wall_on){
-                        // target_heading = get_heading() + 45;
-                        // xTimerReset(rotate_timer, portMAX_DELAY);
-                        turn_left_for_ticks(10000,20);
+                        target_heading = get_heading() + 45;
+                        xTimerReset(rotate_timer, portMAX_DELAY);
                     }
                     break;
                 case D_ULTRASONIC_EVENT:
                     if (ultrasonic_enabled){
                         stop();
-                        vTaskDelay(100);
-                        move_backward(speed, speed);
+                        move_backward(8000, 8000);
                         //printf("Reversing\n");
                         //add_alarm_in_ms(500, stop_reversing_isr, NULL, &reversing_stop_alarm);
                         xTimerReset(reversing_stop_timer,portMAX_DELAY);

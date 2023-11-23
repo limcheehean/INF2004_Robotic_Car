@@ -3,7 +3,7 @@
 #ifndef MOTOR_CONTROLLER
 #define MOTOR_CONTROLLER
 
-#define KP 40.0f
+#define KP 0.0f
 #define KI 0.0f
 #define KD 0.0f
 
@@ -49,62 +49,51 @@ struct motor_driver * get_configuration() {
 
 };
 
-void update_pwm_for_motor(struct motor * motor, struct wheel_encoder * encoder) {
-
-   static int count = 0;
-
-   // Get pid
-   struct pid * pid = &motor->pid;
-
-   // Check current ticks per second
-   float current_value = (encoder->ticks - motor->accumulated_ticks) / 10; // Check every 100 ms
-   float error = motor->ticks_per_second /10 - current_value;
-   if (motor->accumulated_ticks == 0)
-       pid->integral += error;
-   float derivative = error - pid->prev_error;
-   float control_signal = KP * error + KI * pid->integral + KD * derivative;
-   if (motor->pwm_level + control_signal < 0)
-       motor->pwm_level = 0;
-   motor->pwm_level += control_signal;
-   motor->accumulated_ticks = encoder->ticks;
-
-   //if (count % 10 == 0)
-       //printf("Total ticks: %d, Current Value: %.2f, Error: %.2f, Control Signal: %.2f, PWM: %d\n", motor->accumulated_ticks, current_value, error, control_signal, motor->pwm_level);
-
-}
-
-void task_update_pwm_pid() {
-    static int initial_stop = 0;
-   while (true) {
-
-       struct motor_driver * config = get_configuration();
-       struct wheel_encoder_data * data = get_encoder_data();
-
-       if (config->motor_status != MOTOR_STATUS_MOVING){
-            // if (initial_stop == 1){
-            //     printf("STOP!\n");
-            //     initial_stop = 0;
-            //     stop();
-            // }
-            //printf("Not moving\n");
-           continue;
-
-       }
-        else {
-            initial_stop = 1;
-        }
-
-       struct motor * left_motor = &config->left_motor;
-       struct motor * right_motor = &config->right_motor;
-       struct wheel_encoder * left_encoder = &data->left_encoder;
-       struct wheel_encoder * right_encoder = &data->right_encoder;
-
-       update_pwm_for_motor(left_motor, left_encoder);
-       update_pwm_for_motor(right_motor, right_encoder);
-
-       vTaskDelay(pdMS_TO_TICKS(100));
-   }
-}
+//void update_pwm_for_motor(struct motor * motor, struct wheel_encoder * encoder) {
+//
+//    static int count = 0;
+//
+//    // Get pid
+//    struct pid * pid = &motor->pid;
+//
+//    // Check current ticks per second
+//    float current_value = (encoder->ticks - motor->accumulated_ticks) / 0.1f; // Check every 100 ms
+//    float error = motor->ticks_per_second - current_value;
+//    if (motor->accumulated_ticks == 0)
+//        pid->integral += error;
+//    float derivative = error - pid->prev_error;
+//    float control_signal = KP * error + KI * pid->integral + KD * derivative;
+//    if (motor->pwm_level + control_signal < 0)
+//        motor->pwm_level = 0;
+//    motor->pwm_level += control_signal;
+//    motor->accumulated_ticks = encoder->ticks;
+//
+//    if (count % 10 == 0)
+//        printf("Total ticks: %d, Current Value: %.2f, Error: %.2f, Control Signal: %.2f, PWM: %d\n", motor->accumulated_ticks, current_value, error, control_signal, motor->pwm_level);
+//
+//}
+//
+//void task_update_pwm_pid() {
+//
+//    while (true) {
+//
+//        struct motor_driver * config = get_configuration();
+//        struct wheel_encoder_data * data = get_encoder_data();
+//
+//        if (config->motor_status != MOTOR_STATUS_MOVING)
+//            continue;
+//
+//        struct motor * left_motor = &config->left_motor;
+//        struct motor * right_motor = &config->right_motor;
+//        struct wheel_encoder * left_encoder = &data->left_encoder;
+//        struct wheel_encoder * right_encoder = &data->right_encoder;
+//
+//        update_pwm_for_motor(left_motor, left_encoder);
+//        update_pwm_for_motor(right_motor, right_encoder);
+//
+//        vTaskDelay(pdMS_TO_TICKS(100));
+//    }
+//}
 
 void task_update_motor_pwm() {
 
@@ -164,22 +153,22 @@ void init_motor_controller(int left_pwm_pin,
     gpio_set_dir(right_forward_pin, GPIO_OUT);
     gpio_set_dir(right_backward_pin, GPIO_OUT);
 
-   // Configure PID Task
-   xTaskCreate(task_update_pwm_pid,
-               "UpdatePwmPidThread",
-               configMINIMAL_STACK_SIZE,
-               NULL,
-               5,
-               NULL);
-   printf("Create pid task");
-
-   xTaskCreate(task_update_motor_pwm,
-               "UpdateMotorPwmThread",
-               configMINIMAL_STACK_SIZE,
-               NULL,
-               5,
-               NULL);
-   printf("Created update speed test");
+//    // Configure PID Task
+//    xTaskCreate(task_update_pwm_pid,
+//                "UpdatePwmPidThread",
+//                configMINIMAL_STACK_SIZE,
+//                NULL,
+//                5,
+//                NULL);
+//    printf("Create pid task");
+//
+//    xTaskCreate(task_update_motor_pwm,
+//                "UpdateMotorPwmThread",
+//                configMINIMAL_STACK_SIZE,
+//                NULL,
+//                5,
+//                NULL);
+//    printf("Created update speed test");
 
 }
 
@@ -316,7 +305,6 @@ void turn_around(float speed) {
 
 // Stop car
 void stop() {
-    printf("STOP CALLED\n");
     set_motor_status(MOTOR_STATUS_STOPPED);
     set_wheel_speed(0, 0);
 }
