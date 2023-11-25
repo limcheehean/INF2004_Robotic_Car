@@ -73,7 +73,7 @@ int main()
     printf("cgi initialized\n");
 
     //move_forward(0.5,0.65);
-    move_forward_for_ticks(8000, 8000, 100, 100);
+    //move_forward_for_ticks(8000, 8000, 100, 100);
 
     printf("Move forwards!\n");
 

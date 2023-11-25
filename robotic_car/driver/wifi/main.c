@@ -16,8 +16,10 @@
 // WIFI Credentials - take care if pushing to github!
 //const char WIFI_SSID[] = "POCO F4 GT"; //20V3
 //const char WIFI_PASSWORD[] = "qqsypbcppz7dt4m";
-const char WIFI_SSID[] = "Thrith";
-const char WIFI_PASSWORD[] = "reness10";
+//const char WIFI_SSID[] = "Thrith";
+//const char WIFI_PASSWORD[] = "reness10";
+const char WIFI_SSID[] = "AndroidAP_2237";
+const char WIFI_PASSWORD[] = "7322password";
 // Kanagarani2!
 // S20,reness10
 // ravirani, kanagarani18

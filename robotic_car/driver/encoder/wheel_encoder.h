@@ -68,7 +68,7 @@ void wheel_moved_isr(uint gpio, uint32_t events) {
     //pt %d, %d\n", encoder->ticks, encoder->ticks_to_stop);
     if (encoder->ticks >= encoder->ticks_to_stop){
         //printf("STOP!\n");
-        stop();
+        stop(); //will stop both wheels regardless - hence, assumed that both wheels run the same number of ticks
     }
 //    encoder->total_distance = (float)encoder->ticks / 40 * 20.4f;//33.2f;
 //    encoder->current_speed = /* 33.2f */ 20.4f / 40 / ((float)(current_time - encoder->last_time) / 1000000.0f);

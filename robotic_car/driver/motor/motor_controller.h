@@ -3,8 +3,8 @@
 #ifndef MOTOR_CONTROLLER
 #define MOTOR_CONTROLLER
 
-#define KP 75.0f
-#define KI 0.875f
+#define KP 50.0f
+#define KI 0.0f
 #define KD 0.0f
 
 #include <hardware/pwm.h>
@@ -57,20 +57,32 @@ void update_pwm_for_motor(struct motor * motor, struct wheel_encoder * encoder) 
    struct pid * pid = &motor->pid;
 
    // Check current ticks per second
-   float current_value = (encoder->ticks - motor->accumulated_ticks) / 10; // Check every 100 ms
-   float error = motor->ticks_per_second /10 - current_value;
-   if (motor->accumulated_ticks == 0)
-       pid->integral += error;
+   float current_value = (encoder->ticks - motor->accumulated_ticks) ; // Check every 100 ms
+   //float error = motor->ticks_per_second /10 - current_value;
+   float error = (float) encoder -> ticks_to_stop / ( 10 ) - current_value; //10 ticks per second
+   //if (motor->accumulated_ticks == 0)
+   pid->integral += error;
    float derivative = error - pid->prev_error;
    float control_signal = KP * error + KI * pid->integral + KD * derivative;
+
+   /* Assign curr error as previous */
+   pid -> prev_error = error;
    if (motor->pwm_level + control_signal < 0)
        motor->pwm_level = 0;
+
    motor->pwm_level += control_signal;
+
+   /* Updated ticks */
    motor->accumulated_ticks = encoder->ticks;
 
    //if (count % 10 == 0)
    //    printf("Total ticks: %d, Current Value: %.2f, Error: %.2f, Control Signal: %.2f, PWM: %d\n", motor->accumulated_ticks, current_value, error, control_signal, motor->pwm_level);
-
+    //if (motor -> ticks_per_second > 0){
+    //    printf("Total ticks: %d, Current Value: %.2f, Error: %.2f, Control Signal: %.2f, PWM: %d\n", motor->accumulated_ticks, current_value, error, control_signal, motor->pwm_level);
+    
+    //}
+    printf(" %s: ", encoder->side);
+    printf(" Goal/100ms: %d | Goal/s: %d| Current: %d | Motor status: %d |PWM: %d | \n", encoder -> ticks_to_stop / ( 10 ), motor-> ticks_per_second, encoder -> ticks_to_stop, get_configuration()->motor_status,  motor->pwm_level);
 }
 
 void task_update_pwm_pid() {
@@ -102,8 +114,15 @@ void task_update_motor_pwm() {
         struct motor_driver * config = get_configuration();
         struct motor * left_motor = &config->left_motor;
         struct motor * right_motor = &config->right_motor;
-        pwm_set_chan_level(left_motor->slice, left_motor->channel, left_motor->pwm_level);
-        pwm_set_chan_level(right_motor->slice, right_motor->channel, right_motor->pwm_level);
+        if (config->motor_status != MOTOR_STATUS_MOVING){
+            pwm_set_chan_level(left_motor->slice, left_motor->channel, 0);
+            pwm_set_chan_level(right_motor->slice, right_motor->channel, 0);
+        }
+        else{
+            pwm_set_chan_level(left_motor->slice, left_motor->channel, left_motor->pwm_level);
+            pwm_set_chan_level(right_motor->slice, right_motor->channel, right_motor->pwm_level);
+        }
+        vTaskDelay(pdMS_TO_TICKS(10));
     }
 
 }
@@ -189,6 +208,10 @@ void set_wheel_speed(float left_speed, float right_speed) {
 //    config->right_motor.pwm_level = right_speed * 5000;
     config->left_motor.pwm_level = left_speed;
     config->right_motor.pwm_level = right_speed;
+    if (left_speed == 0 && right_speed == 0){
+        config->left_motor.ticks_per_second = 0;
+        config->left_motor.ticks_per_second = 0;
+    }
     pwm_set_chan_level(config->right_motor.slice, config->right_motor.channel, right_speed);
 
     pwm_set_chan_level(config->left_motor.slice, config->left_motor.channel, left_speed);
@@ -314,4 +337,15 @@ void stop() {
     set_wheel_speed(0, 0);
 }
 
+/*
+void stop_left_wheel(){
+    struct motor_driver * config = get_configuration();
+    config->left_motor.pwm_level = 0;
+    pwm_set_chan_level(config->left_motor.slice, config->left_motor.channel, 0);
+}
+void stop_right_wheel(){
+    struct motor_driver * config = get_configuration();
+    config->right_motor.pwm_level = 0;
+    pwm_set_chan_level(config->right_motor.slice, config->right_motor.channel, 0);
+}*/
 #endif

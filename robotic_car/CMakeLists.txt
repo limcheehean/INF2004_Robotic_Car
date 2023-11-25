@@ -1,7 +1,7 @@
 add_executable(robotic_car
         robotic_car.c
 
-        #driver/wifi/wifi_task_message_receiver.c
+        driver/wifi/wifi_task_message_receiver.c
         #driver/wifi/wifi_task_message_buffer.h
         #driver/ir_sensor/test_with_wifi.c
         driver/motor/motor_controller.h
