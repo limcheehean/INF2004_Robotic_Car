@@ -175,7 +175,7 @@ void init_motor_controller(int left_pwm_pin,
     right_motor->backward_pin = right_backward_pin;
 
     /* pid to accomodote for individual motor characteristics */
-    left_motor -> pid.kp = 400.0f;
+    left_motor -> pid.kp = 300.0f;
     left_motor -> pid.ki = 7.5f;
     left_motor -> pid.kd = 10.0f;
 
