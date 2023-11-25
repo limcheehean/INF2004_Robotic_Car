@@ -59,7 +59,7 @@ void update_pwm_for_motor(struct motor * motor, struct wheel_encoder * encoder) 
    // Check current ticks per second
    float current_value = (encoder->ticks - motor->accumulated_ticks) ; // Check every 100 ms
    //float error = motor->ticks_per_second /10 - current_value;
-   float error = (float) encoder -> ticks_to_stop / ( 10 ) - current_value; //10 ticks per second
+   float error = (float) encoder -> ticks_to_stop / ( 10 ) - current_value; //10 ticks per 100ms
    //if (motor->accumulated_ticks == 0)
    pid->integral += error;
    float derivative = error - pid->prev_error;
