@@ -8,6 +8,8 @@
 #include "driver/motor/motor_controller.h"
 
 void stop();
+void stop_left_wheel();
+void stop_right_wheel();
 
 struct wheel_encoder {
 
@@ -65,10 +67,17 @@ void wheel_moved_isr(uint gpio, uint32_t events) {
     struct wheel_encoder * encoder = gpio == data->left_encoder.pin ? &data->left_encoder : &data->right_encoder;
 
     encoder->ticks++;
-    //pt %d, %d\n", encoder->ticks, encoder->ticks_to_stop);
+    
     if (encoder->ticks >= encoder->ticks_to_stop){
         //printf("STOP!\n");
-        stop(); //will stop both wheels regardless - hence, assumed that both wheels run the same number of ticks
+        
+        if (gpio == data->left_encoder.pin){
+            stop_left_wheel();
+        }
+        else{
+            stop_right_wheel();
+        }
+        //stop();
     }
 //    encoder->total_distance = (float)encoder->ticks / 40 * 20.4f;//33.2f;
 //    encoder->current_speed = /* 33.2f */ 20.4f / 40 / ((float)(current_time - encoder->last_time) / 1000000.0f);
@@ -96,8 +105,8 @@ void init_wheel_encoder(int left_encoder_pin, int right_encoder_pin) {
     gpio_set_pulls(right_encoder_pin, true, false);
 
     // Update ticks when wheel moved
-    gpio_set_irq_enabled_with_callback(left_encoder_pin, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &wheel_moved_isr);
-    gpio_set_irq_enabled_with_callback(right_encoder_pin, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &wheel_moved_isr);
+    //gpio_set_irq_enabled_with_callback(left_encoder_pin, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &wheel_moved_isr);
+    //gpio_set_irq_enabled_with_callback(right_encoder_pin, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &wheel_moved_isr);
 
 }
 

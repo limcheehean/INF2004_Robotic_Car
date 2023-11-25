@@ -38,22 +38,26 @@ const char *cgi_move_handler(int iIndex, int iNumParams, char *pcParam[], char *
 
         if (strcmp(pcValue[0], "up") == 0)
         {
+            stop();
             printf("[FORWARD] Left: %.2f (%d ticks), Right: %.2f (%d ticks)\n", left_power, left_ticks, right_power, right_ticks);
             // move_forward(left_power, right_power);
             move_forward_for_ticks(left_power, right_power, left_ticks, right_ticks);
         }
         else if (strcmp(pcValue[0], "down") == 0)
         {
+            stop();
             printf("[BACKWARD] Left: %.2f (%d ticks), Right: %.2f (%d ticks)\n", left_power, left_ticks, right_power, right_ticks);
             move_backward_for_ticks(left_power, right_power, left_ticks, right_ticks);
         }
         else if (strcmp(pcValue[0], "left") == 0)
         {
+            stop();
             printf("[LEFT] %.2f (%d ticks)\n", right_power, right_ticks);
             turn_left_for_ticks(right_power, right_ticks);
         }
         else if (strcmp(pcValue[0], "right") == 0)
         {
+            stop();
             printf("[RIGHT] %.2f (%d ticks)\n", left_power, left_ticks);
             turn_right_for_ticks(left_power, left_ticks);
         }
