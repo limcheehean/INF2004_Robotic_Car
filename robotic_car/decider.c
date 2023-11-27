@@ -84,10 +84,10 @@ void decider_task( void *pvParameters ) {
                     if (ultrasonic_enabled){
                         stop();
                         ultrasonic_enabled = 0;
-                        move_backward_for_ticks(8000, 6000, 100, 100);
+                        move_backward_for_ticks(100, 100, 100, 100);
                         //printf("Reversing\n");
                         //add_alarm_in_ms(500, stop_reversing_isr, NULL, &reversing_stop_alarm);
-                        xTimerReset(reversing_stop_timer,portMAX_DELAY);
+                        //xTimerReset(reversing_stop_timer,portMAX_DELAY);
                     }
                     break;
 

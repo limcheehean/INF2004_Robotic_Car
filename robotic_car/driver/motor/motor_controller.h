@@ -92,8 +92,8 @@ void update_pwm_for_motor(struct motor * motor, struct wheel_encoder * encoder) 
     //    printf("Total ticks: %d, Current Value: %.2f, Error: %.2f, Control Signal: %.2f, PWM: %d\n", motor->accumulated_ticks, current_value, error, control_signal, motor->pwm_level);
     
     //}
-    printf(" %s: ", encoder->side);
-    printf(" Goal/100ms: %d | Current: %.2f | Accumulated: %d|  Motor status: %d |PWM: %d | \n", 5, current_value, motor -> accumulated_ticks, get_configuration()->motor_status,  motor->pwm_level);
+    //printf(" %s: ", encoder->side);
+    //printf(" Goal/100ms: %d | Current: %.2f | Accumulated: %d|  Motor status: %d |PWM: %d | \n", 5, current_value, motor -> accumulated_ticks, get_configuration()->motor_status,  motor->pwm_level);
 }
 
 void task_update_pwm_pid() {
