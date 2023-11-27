@@ -4,6 +4,8 @@
 #include "pico/stdlib.h"
 #include "hardware/i2c.h"
 #include <math.h>
+#include "FreeRTOS.h"
+#include "task.h"
 
 #define I2C_PORT i2c0
 #define I2C_CLOCK_FREQ 100000
@@ -44,6 +46,8 @@ typedef struct {
 } Calibrated_Data;
 
 int16_t x_max = 0, x_min = 0, y_max = 0, y_min = 0, z_max = 0, z_min = 0;
+
+TaskHandle_t g_magnetometer_task_handle;
 
 void configure(uint8_t addr, uint8_t reg, uint8_t value) {
     uint8_t data[] = {reg, value};
@@ -87,6 +91,7 @@ Calibrated_Data calibrate(int16_t x, int16_t y, int16_t z) {
 
     return calibrated_data;
 }
+/*
 int init_magnetometer(){
     i2c_init(I2C_PORT, I2C_CLOCK_FREQ);
     i2c_set_slave_mode(I2C_PORT, false, 0);
@@ -97,7 +102,7 @@ int init_magnetometer(){
     configure(MAG_ADDR, MAG_MR_REG, 0x00);
 
     sleep_ms(3000);
-}
+}*/
 
 float get_heading(){
     Acc_Data acc_data;
@@ -157,4 +162,52 @@ int main() {
     return 0;
 }
 #endif
+void magnetometer_task( void *pvParameters ) {
+    i2c_init(I2C_PORT, I2C_CLOCK_FREQ);
+    i2c_set_slave_mode(I2C_PORT, false, 0);
+    gpio_set_function(I2C_SDA_PIN, GPIO_FUNC_I2C);
+    gpio_set_function(I2C_SCL_PIN, GPIO_FUNC_I2C);
+
+    configure(ACC_ADDR, ACC_CTRL_REG1, 0x57);
+    configure(MAG_ADDR, MAG_MR_REG, 0x00);
+
+    vTaskDelay(pdMS_TO_TICKS(3000));
+    while (true) {
+        // Extract and format the accelerometer data
+        Acc_Data acc_data;
+        acc_data.x = (int16_t)((read(ACC_ADDR, ACC_X_MSB) << 8) | read(ACC_ADDR, ACC_X_LSB));
+        acc_data.y = (int16_t)((read(ACC_ADDR, ACC_Y_MSB) << 8) | read(ACC_ADDR, ACC_Y_LSB));
+        acc_data.z = (int16_t)((read(ACC_ADDR, ACC_Z_MSB) << 8) | read(ACC_ADDR, ACC_Z_LSB));
+
+        // Extract and format the magnetometer data
+        Mag_Data mag_data;
+        mag_data.x = (int16_t)((read(MAG_ADDR, MAG_X_MSB) << 8) | read(MAG_ADDR, MAG_X_LSB));
+        mag_data.y = (int16_t)((read(MAG_ADDR, MAG_Y_MSB) << 8) | read(MAG_ADDR, MAG_Y_LSB));
+        mag_data.z = (int16_t)((read(MAG_ADDR, MAG_Z_MSB) << 8) | read(MAG_ADDR, MAG_Z_LSB));
+
+        Calibrated_Data calibrated_data = calibrate(mag_data.x, mag_data.y, mag_data.z);
+
+        float heading = atan2(calibrated_data.y, calibrated_data.x) * 180 / M_PI;
+
+        if (heading < 0)
+            heading += 360;
+
+        printf("Accelerometer x: %d y: %d z: %d\n", acc_data.x, acc_data.y, acc_data.z);
+        printf("Magnetometer x: %d y: %d z: %d\n", mag_data.x, mag_data.y, mag_data.z);
+        printf("Heading: %.2f\n\n", heading);
+
+        vTaskDelay(pdMS_TO_TICKS(200));
+    }
+}
+void init_magnetometer(){
+    //g_decider_message_queue = xQueueCreate(30, sizeof(DeciderMessage_t));
+    xTaskCreate(magnetometer_task,
+                "Magnetometer Task",
+                configMINIMAL_STACK_SIZE,
+                ( void * ) 1, // Can try experimenting with parameter
+                tskIDLE_PRIORITY,
+                &g_magnetometer_task_handle);
+    
+    printf("Magnetometer initialized\n");
+}
 #endif

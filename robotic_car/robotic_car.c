@@ -39,7 +39,7 @@ int main()
 
     barcode_driver_init();
 
-    //init_magnetometer();
+    init_magnetometer();
 
     //printf("Magnetometer initialized\n");
 
