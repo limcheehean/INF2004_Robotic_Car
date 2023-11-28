@@ -9,12 +9,12 @@
 #endif
 
 /**
- * Pin 13 - trigger
- * Pin 14 - echo
+ * Pin 19 - trigger
+ * Pin 18 - echo
  * **/
 
-#define ULTRA_TRIGGER_PIN 14
-#define ULTRA_ECHO_PIN 15
+#define ULTRA_TRIGGER_PIN 19
+#define ULTRA_ECHO_PIN 18
 
 #define NUM_READINGS 3  // Number of readings to average
 #define MIN_DISTANCE_CM 6   // Minimum distance (in centimeters)

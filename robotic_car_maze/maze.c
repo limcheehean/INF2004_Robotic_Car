@@ -2,6 +2,10 @@
 #include <stddef.h>
 #include <malloc.h>
 #include <pico/printf.h>
+//#include "../robotic_car/driver/motor/motor_controller.h"
+
+#define TICKS_TO_ROTATE_90 23
+#define TICKS_TO_MOVE_FORWARD 25
 
 typedef struct node {
     struct node *next, *prev;
@@ -18,6 +22,14 @@ typedef struct block {
 typedef struct map {
     // Current coordinates of the car
     int current_x, current_y;
+
+    /**
+     * 0 - left
+     * 1 - up
+     * 2 - right
+     * 3 - down
+     */
+    int orientation;
 
     // Store the grid of blocks on the map
     struct block blocks[MAP_WIDTH][MAP_HEIGHT];
@@ -148,8 +160,46 @@ bool back_is_wall() {
 void move_to_block(struct block *block) {
     map * map = get_map();
     printf("Moving car to (%d, %d)\n", block->x, block->y);
+    // start off facing left
+    int turn_ticks = 0;
+    /**
+     * x decrease = left;
+     * x increase = right;
+     * y increase = down;
+     * y decrease = up;
+     */
+    int change_x = block->x - map->current_x;
+    int target_angle = 0;
+    if (block -> x < map->current_x){
+        target_angle = 0;
+    }
+    else if (block -> x > map->current_y){
+        target_angle = 2;
+    }
+    else if (block -> y > map->current_y){
+        target_angle = 3;
+    }
+    else if (block -> y < map->current_y){
+        target_angle = 1;
+    }
+
+    // 0 - 3 = -3
+    // 4 - 3 = 1
+    turn_ticks = (target_angle - map->orientation);
+    if (turn_ticks < 0){
+        turn_ticks = 4 + turn_ticks;
+    }
+    turn_ticks *= TICKS_TO_ROTATE_90;
+    
+    /*
+    turn_right_for_ticks(turn_ticks);
+    move_forward_for_ticks(TICKS_TO_MOVE_FORWARD);
+    */
+    printf("TURNING RIGHT FOR %d TICKS!\n", turn_ticks);
     map->current_x = block->x;
     map->current_y = block->y;
+
+    
 }
 
 void dfs(struct block *block) {

@@ -340,15 +340,18 @@ void move_backward(float left_speed, float right_speed) {
 void turn_left(float speed) {
     set_left_motor_status(MOTOR_STATUS_MOVING);
     set_wheel_direction(FORWARD, FORWARD);
-    set_wheel_speed(0, speed);
+    //set_wheel_speed(0, speed);
+    set_left_wheel_speed(speed);
 }
 
 // Turn car to the right, about right wheel
 void turn_right(float speed) {
     set_right_motor_status(MOTOR_STATUS_MOVING);
     set_wheel_direction(FORWARD, FORWARD);
-    set_wheel_speed(speed, 0);
+    //set_wheel_speed(speed, 0);
+    set_right_wheel_speed(speed);
 }
+
 
 void move_forward_for_ticks(float left_speed, float right_speed, int left_ticks, int right_ticks) {
     struct wheel_encoder_data * data = get_encoder_data();
