@@ -3,7 +3,11 @@
 #include <malloc.h>
 #include <pico/printf.h>
 #include "../robotic_car/driver/motor/motor_controller.h"
+#include "../robotic_car/driver/magnetnometer/magnetnometer.c"
 
+#include "../robotic_car/driver/encoder/wheel_encoder.h"
+#ifndef MAZE_IMPORT
+#define MAZE_IMPORT
 #define MAZE_IN_FREERTOS_TASK
 
 #ifndef ROBOTIC_MAZE_DEFINE
@@ -178,7 +182,15 @@ bool back_is_wall() {
     return false;
 }
 
+void calibrate_car(){
+    int turn_ticks = 350;
+    int placeholder;
+    xQueueSend(g_magnetometer_message_queue, &turn_ticks, portMAX_DELAY);
+    xQueueReceive(g_maze_message_queue, &placeholder, portMAX_DELAY);
+}
 void move_to_block(struct block *block) {
+
+    int placeholder;
     map * map = get_map();
     printf("Moving car to (%d, %d)\n", block->x, block->y);
     // start off facing left
@@ -194,7 +206,7 @@ void move_to_block(struct block *block) {
     if (block -> x < map->current_x){
         target_angle = 0;
     }
-    else if (block -> x > map->current_y){
+    else if (block -> x > map->current_x){
         target_angle = 2;
     }
     else if (block -> y > map->current_y){
@@ -210,23 +222,68 @@ void move_to_block(struct block *block) {
     if (turn_ticks < 0){
         turn_ticks = 4 + turn_ticks;
     }
-    turn_ticks *= TICKS_TO_ROTATE_90;
-    map->orientation = target_angle;
+    //turn_ticks *= TICKS_TO_ROTATE_90;
+    //turn_ticks *= 90;
     
     if (turn_ticks > 0){
-        printf("TURNING RIGHT FOR %d TICKS!\n", turn_ticks);
-        rotate_right_for_ticks(100,turn_ticks/2, turn_ticks/2);
+        //printf("TURNING RIGHT FOR %d TICKS!\n", turn_ticks);
+        //rotate_right_for_ticks(100,9999,9999);
+        //xQueueSend(g_magnetometer_message_queue, &turn_ticks, portMAX_DELAY);
+        //xQueueSend(g_magnetometer_message_queue, &turn_ticks, portMAX_DELAY);
+        //xQueueReceive(g_maze_message_queue, &placeholder, portMAX_DELAY);
     }
+    map->orientation = target_angle;
+    /*
     #ifdef MAZE_IN_FREERTOS_TASK
     vTaskDelay(pdMS_TO_TICKS(3000));
-    #endif
+    #endif*/
+    int i = 0;
+    xQueueReceive(get_encoder_data()->message_queue, &i, pdMS_TO_TICKS(100)); //clear queue
+    if (turn_ticks > 0){
+        if (turn_ticks == -1 || turn_ticks == 3){
+            printf("Turn left 13000, %d\n", turn_ticks);
+            turn_left_for_ticks(13000,TICKS_TO_ROTATE_90);
+            xQueueReceive(get_encoder_data()->message_queue, &i, portMAX_DELAY);
+            vTaskDelay(pdMS_TO_TICKS(100));
+            move_forward_for_ticks(100,100, TICKS_TO_MOVE_FORWARD/2, TICKS_TO_MOVE_FORWARD/2);
+            xQueueReceive(get_encoder_data()->message_queue, &i, portMAX_DELAY);
+            xQueueReceive(get_encoder_data()->message_queue, &i, portMAX_DELAY);
+        }
+        else if (turn_ticks == 1){
+            turn_right_for_ticks(13000,TICKS_TO_ROTATE_90);
+            
+            printf("Turn right 13000 %d\n", turn_ticks);
+            xQueueReceive(get_encoder_data()->message_queue, &i, portMAX_DELAY);
+            vTaskDelay(pdMS_TO_TICKS(100));
+            move_forward_for_ticks(100,100, TICKS_TO_MOVE_FORWARD/2, TICKS_TO_MOVE_FORWARD/2);
+            
+            xQueueReceive(get_encoder_data()->message_queue, &i, portMAX_DELAY);
+            xQueueReceive(get_encoder_data()->message_queue, &i, portMAX_DELAY);
+        }
+        else{
 
-    printf("MOVING FOrWARD FOR %d TICKS!\n", TICKS_TO_MOVE_FORWARD);
-    move_forward_for_ticks(100,100,TICKS_TO_MOVE_FORWARD, TICKS_TO_MOVE_FORWARD);
+            printf("Turn else 13000 %d\n", turn_ticks);
+            rotate_right_for_ticks(13000,TICKS_TO_ROTATE_90,TICKS_TO_ROTATE_90);
+            
+            xQueueReceive(get_encoder_data()->message_queue, &i, portMAX_DELAY);
+            vTaskDelay(pdMS_TO_TICKS(100));
+            move_forward_for_ticks(100,100, TICKS_TO_MOVE_FORWARD/2, TICKS_TO_MOVE_FORWARD/2);
+            
+            xQueueReceive(get_encoder_data()->message_queue, &i, portMAX_DELAY);
+            xQueueReceive(get_encoder_data()->message_queue, &i, portMAX_DELAY);
+        }
+    }
+    else {
+        printf("MOVING FOrWARD FOR %d TICKS!\n", TICKS_TO_MOVE_FORWARD);
+        move_forward_for_ticks(100,100,TICKS_TO_MOVE_FORWARD, TICKS_TO_MOVE_FORWARD);
+
+        xQueueReceive(get_encoder_data()->message_queue, &i, portMAX_DELAY);
+        xQueueReceive(get_encoder_data()->message_queue, &i, portMAX_DELAY);
+    }
     
     //sleep_ms(4000);
     #ifdef MAZE_IN_FREERTOS_TASK
-    vTaskDelay(pdMS_TO_TICKS(3000));
+    vTaskDelay(pdMS_TO_TICKS(1000));
     #endif
     map->current_x = block->x;
     map->current_y = block->y;
@@ -276,6 +333,7 @@ void dfs(struct block *block) {
 void start_mapping() {
     
     map * map = get_map();
+    //calibrate_car();
     
     // Initialise all blocks
     for (int x = 0; x < MAP_WIDTH; x++) {
@@ -388,3 +446,5 @@ void init_maze_task(){
     
     printf("Maze Task initialized\n");
 }
+
+#endif

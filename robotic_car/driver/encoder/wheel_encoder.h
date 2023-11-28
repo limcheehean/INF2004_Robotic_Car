@@ -6,6 +6,8 @@
 #include <pico/time.h>
 #include "pico/stdlib.h"
 #include "driver/motor/motor_controller.h"
+#include "FreeRTOS.h"
+#include "queue.h"
 
 void stop();
 void stop_left_wheel();
@@ -27,6 +29,7 @@ struct wheel_encoder_data {
 
     struct wheel_encoder left_encoder;
     struct wheel_encoder right_encoder;
+    QueueHandle_t message_queue;
 
 };
 
@@ -68,14 +71,18 @@ void wheel_moved_isr(uint gpio, uint32_t events) {
 
     encoder->ticks++;
     
-    if (encoder->ticks >= encoder->ticks_to_stop){
+    if (encoder->ticks >= encoder->ticks_to_stop && encoder->ticks_to_stop > 0){
         //printf("STOP!\n");
-        
+        int i = 0;
         if (gpio == data->left_encoder.pin){
+            i = 1;
             stop_left_wheel();
+            xQueueSendFromISR(data->message_queue, &i, NULL);
         }
         else{
+            i = 2;
             stop_right_wheel();
+            xQueueSendFromISR(data->message_queue, &i, NULL);
         }
         //stop();
     }
@@ -103,6 +110,8 @@ void init_wheel_encoder(int left_encoder_pin, int right_encoder_pin) {
     gpio_set_dir(right_encoder_pin, GPIO_IN);
     gpio_set_pulls(left_encoder_pin, true, false);
     gpio_set_pulls(right_encoder_pin, true, false);
+
+    get_encoder_data()->message_queue = xQueueCreate(1, sizeof(int));
 
     // Update ticks when wheel moved
     //gpio_set_irq_enabled_with_callback(left_encoder_pin, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &wheel_moved_isr);

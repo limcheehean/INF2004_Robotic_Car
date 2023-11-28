@@ -15,6 +15,7 @@
 
 struct pid {
     float integral, prev_error, kp, ki, kd;
+    int spinning;
 };
 
 struct motor {
@@ -52,38 +53,40 @@ struct motor_driver * get_configuration() {
 };
 
 void update_pwm_for_motor(struct motor * motor, struct wheel_encoder * encoder) {
+    if (!motor->pid.spinning){
+        printf("PWM");
+        static int count = 0;
 
-   static int count = 0;
+        // Get pid
+        struct pid * pid = &motor->pid;
 
-   // Get pid
-   struct pid * pid = &motor->pid;
+        // Check current ticks per second
+        float current_value = (encoder->ticks - motor->accumulated_ticks) ; // Check every 100 ms
+        //float error = motor->ticks_per_second /10 - current_value;
+        //float error = pid -> prev_error - current_value;
+        float error = 10 - current_value; //10 ticks per 100ms
+        //if (motor->accumulated_ticks == 0)
+        pid->integral += error;
+        float derivative = error - pid->prev_error;
+        float control_signal = pid->kp * error + pid->ki * pid->integral + pid->kd * derivative;
 
-   // Check current ticks per second
-   float current_value = (encoder->ticks - motor->accumulated_ticks) ; // Check every 100 ms
-   //float error = motor->ticks_per_second /10 - current_value;
-   //float error = pid -> prev_error - current_value;
-   float error = 10 - current_value; //10 ticks per 100ms
-   //if (motor->accumulated_ticks == 0)
-   pid->integral += error;
-   float derivative = error - pid->prev_error;
-   float control_signal = pid->kp * error + pid->ki * pid->integral + pid->kd * derivative;
+        /* Assign curr error as previous */
+        pid -> prev_error = error;
 
-   /* Assign curr error as previous */
-   pid -> prev_error = error;
+        motor->pwm_level += control_signal;
 
-   motor->pwm_level += control_signal;
+        if (motor->pwm_level < 0){
+            motor->pwm_level = 0;
+        }
 
-   if (motor->pwm_level < 0){
-       motor->pwm_level = 0;
-   }
+            else if (motor -> pwm_level > 25000){
+                motor -> pwm_level = 25000;
+            }
 
-    else if (motor -> pwm_level > 25000){
-        motor -> pwm_level = 25000;
+
+        /* Updated ticks */
+        motor->accumulated_ticks = encoder->ticks;
     }
-
-
-   /* Updated ticks */
-   motor->accumulated_ticks = encoder->ticks;
    //encoder-> accumulated_ticks = 0;
 
    //if (count % 10 == 0)
@@ -113,11 +116,11 @@ void task_update_pwm_pid() {
        struct motor * right_motor = &config->right_motor;
        struct wheel_encoder * left_encoder = &data->left_encoder;
        struct wheel_encoder * right_encoder = &data->right_encoder;
-        if (config -> left_motor_status != MOTOR_STATUS_STOPPED){
+        if (config -> left_motor_status != MOTOR_STATUS_STOPPED && !config->left_motor.pid.spinning){
             //printf("Left not stop|");
             update_pwm_for_motor(left_motor, left_encoder);
         }
-        if (config -> right_motor_status != MOTOR_STATUS_STOPPED){
+        if (config -> right_motor_status != MOTOR_STATUS_STOPPED && !config->right_motor.pid.spinning){
             //printf("Right not stop|");
             update_pwm_for_motor(right_motor, right_encoder);
         }
@@ -288,6 +291,7 @@ void set_left_motor_status(bool status) {
     config-> left_motor_status = status;
     // Not moving = Reset PID
     if (config -> left_motor_status == MOTOR_STATUS_MOVING) {
+        config->left_motor.pid.spinning = 0;
         struct motor * left_motor = &config->left_motor;
 
         left_motor->pwm_level = 0;
@@ -307,6 +311,7 @@ void set_right_motor_status(bool status) {
 
     // Not moving = Reset PID
     if (config -> right_motor_status == MOTOR_STATUS_MOVING) {
+        config->right_motor.pid.spinning = 0;
         struct motor * right_motor = &config->right_motor;
 
         right_motor->pwm_level = 0;
@@ -338,18 +343,22 @@ void move_backward(float left_speed, float right_speed) {
 
 // Turn car to the left, about left wheel
 void turn_left(float speed) {
-    set_left_motor_status(MOTOR_STATUS_MOVING);
+    set_right_motor_status(MOTOR_STATUS_MOVING);
+    struct motor_driver * config = get_configuration();
+    config->right_motor.pid.spinning = 1;
     set_wheel_direction(FORWARD, FORWARD);
     //set_wheel_speed(0, speed);
-    set_left_wheel_speed(speed);
+    set_right_wheel_speed(speed);
 }
 
 // Turn car to the right, about right wheel
 void turn_right(float speed) {
-    set_right_motor_status(MOTOR_STATUS_MOVING);
+    set_left_motor_status(MOTOR_STATUS_MOVING);
+    struct motor_driver * config = get_configuration();
+    config->left_motor.pid.spinning = 1;
     set_wheel_direction(FORWARD, FORWARD);
     //set_wheel_speed(speed, 0);
-    set_right_wheel_speed(speed);
+    set_left_wheel_speed(speed);
 }
 
 void move_forward_for_ticks(float left_speed, float right_speed, int left_ticks, int right_ticks) {
@@ -381,6 +390,9 @@ void turn_right_for_ticks(float speed, int ticks) {
 
 void rotate_left_for_ticks(float speed, int left_ticks, int right_ticks){
     set_motor_status(MOTOR_STATUS_MOVING);
+    struct motor_driver * config = get_configuration();
+    //config->left_motor.pid.spinning = 1;
+    //config->right_motor.pid.spinning = 1;
     set_wheel_direction(BACKWARD, FORWARD);
     set_wheel_speed(speed, speed);
     struct wheel_encoder_data * data = get_encoder_data();
@@ -391,6 +403,9 @@ void rotate_left_for_ticks(float speed, int left_ticks, int right_ticks){
 
 void rotate_right_for_ticks(float speed, int left_ticks, int right_ticks){
     set_motor_status(MOTOR_STATUS_MOVING);
+    struct motor_driver * config = get_configuration();
+    config->left_motor.pid.spinning = 1;
+    config->right_motor.pid.spinning = 1;
     set_wheel_direction(FORWARD, BACKWARD);
     set_wheel_speed(speed, speed);
     struct wheel_encoder_data * data = get_encoder_data();

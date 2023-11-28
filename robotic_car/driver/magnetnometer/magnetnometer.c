@@ -6,6 +6,7 @@
 #include <math.h>
 #include "FreeRTOS.h"
 #include "task.h"
+//#include "../../robotic_car_maze/maze.c"
 
 #define I2C_PORT i2c1
 #define I2C_CLOCK_FREQ 100000
@@ -48,6 +49,9 @@ typedef struct {
 int16_t x_max = 0, x_min = 0, y_max = 0, y_min = 0, z_max = 0, z_min = 0;
 
 TaskHandle_t g_magnetometer_task_handle;
+
+QueueHandle_t g_maze_message_queue;
+QueueHandle_t g_magnetometer_message_queue;
 
 void configure(uint8_t addr, uint8_t reg, uint8_t value) {
     uint8_t data[] = {reg, value};
@@ -121,6 +125,7 @@ float get_heading(){
     Calibrated_Data calibrated_data = calibrate(mag_data.x, mag_data.y, mag_data.z);
 
     float heading = atan2(calibrated_data.y, calibrated_data.x) * 180 / M_PI;
+    return heading;
 }
 #ifdef TEST_MAGNETOMETER
 int main() {
@@ -176,36 +181,93 @@ void magnetometer_task( void *pvParameters ) {
 
     vTaskDelay(pdMS_TO_TICKS(3000));*/
     printf("Magnetometer ready!\n");
+    int message;
+    bool checking = false;
+
+    //int change_angle = 70;
+    //xQueueSend(g_magnetometer_message_queue, &change_angle, portMAX_DELAY);
     while (true) {
-        // Extract and format the accelerometer data
-        Acc_Data acc_data;
-        acc_data.x = (int16_t)((read(ACC_ADDR, ACC_X_MSB) << 8) | read(ACC_ADDR, ACC_X_LSB));
-        acc_data.y = (int16_t)((read(ACC_ADDR, ACC_Y_MSB) << 8) | read(ACC_ADDR, ACC_Y_LSB));
-        acc_data.z = (int16_t)((read(ACC_ADDR, ACC_Z_MSB) << 8) | read(ACC_ADDR, ACC_Z_LSB));
+        if (xQueueReceive(g_magnetometer_message_queue, &message, portMAX_DELAY) == pdPASS){
+            checking = true;
 
-        // Extract and format the magnetometer data
-        Mag_Data mag_data;
-        mag_data.x = (int16_t)((read(MAG_ADDR, MAG_X_MSB) << 8) | read(MAG_ADDR, MAG_X_LSB));
-        mag_data.y = (int16_t)((read(MAG_ADDR, MAG_Y_MSB) << 8) | read(MAG_ADDR, MAG_Y_LSB));
-        mag_data.z = (int16_t)((read(MAG_ADDR, MAG_Z_MSB) << 8) | read(MAG_ADDR, MAG_Z_LSB));
+            float original_heading = get_heading();
+            if (original_heading < 0)
+                original_heading += 360;
+            printf("Original heading: %2.2f\n", original_heading);
+            float target_heading = original_heading + message;
+            /* Put within 0 to 360 */
+            if (target_heading < 0) {
+                target_heading += 360;
+            }
+            else if (target_heading > 360){
+                target_heading -= 360;
+            }
 
-        Calibrated_Data calibrated_data = calibrate(mag_data.x, mag_data.y, mag_data.z);
+            printf("Target heading: %2.2f\n", target_heading);
+            float min_heading_range = (float)target_heading - 2.5;
 
-        float heading = atan2(calibrated_data.y, calibrated_data.x) * 180 / M_PI;
+            if (min_heading_range < 0){
+                min_heading_range += 360;
+            }
+            else if (min_heading_range > 360){
+                min_heading_range -= 360;
+            }
 
-        if (heading < 0)
-            heading += 360;
+            float max_heading_range = (float)target_heading + 2.5;
+            
+            if (max_heading_range < 0){
+                max_heading_range += 360;
+            }
+            else if (max_heading_range > 360){
+                max_heading_range -= 360;
+            }
+            // Start checking
+            while (checking){
+                // Extract and format the accelerometer data
+                float heading = get_heading();
 
-        printf("Accelerometer x: %d y: %d z: %d\n", acc_data.x, acc_data.y, acc_data.z);
-        printf("Magnetometer x: %d y: %d z: %d\n", mag_data.x, mag_data.y, mag_data.z);
-        printf("Heading: %.2f\n\n", heading);
+                if (heading < 0)
+                    heading += 360;
 
-        vTaskDelay(pdMS_TO_TICKS(200));
+                //printf("Accelerometer x: %d y: %d z: %d\n", acc_data.x, acc_data.y, acc_data.z);
+                //printf("Magnetometer x: %d y: %d z: %d\n", mag_data.x, mag_data.y, mag_data.z);
+                printf("Heading: %.2f\n\n", heading);
+                rotate_right_for_ticks(6000,1,1);
+                vTaskDelay(pdMS_TO_TICKS(300));
+                if (min_heading_range < max_heading_range ? heading > min_heading_range && heading < max_heading_range : 
+                heading > min_heading_range || heading < max_heading_range ){
+                    stop();
+                    xQueueSend(g_maze_message_queue, &heading, portMAX_DELAY);
+
+                    checking = false;
+                }
+                /*
+                else if (heading > min_heading_range && heading > max_heading_range ){
+                    rotate_left_for_ticks(5000,1,1);
+                    stop();
+                    xQueueSend(g_maze_message_queue, &heading, portMAX_DELAY);
+                    checking = false;
+                }*/
+                /*
+                if (min_heading_range > max_heading_range){
+                    if (heading >= min_heading_range  || heading <= max_heading_range){
+                        stop();
+                        checking = false;
+                    }
+                }
+                else if (min_heading_range <= heading && heading <= max_heading_range){
+                    stop();
+                    checking = false;
+                }*/
+                //vTaskDelay(pdMS_TO_TICKS(200));
+                //vTaskDelay(1);
+            }
+        }
     }
 }
 void init_magnetometer(){
-    //g_decider_message_queue = xQueueCreate(30, sizeof(DeciderMessage_t));
-
+    g_magnetometer_message_queue = xQueueCreate(3, sizeof(int));
+    g_maze_message_queue = xQueueCreate(3, sizeof(int));
     printf("Configuring magnetometer\n");
     configure_magnetometer();
     printf(" Configure done ");
