@@ -21,3 +21,4 @@ include(example_auto_set_url.cmake)
 
 # Add main Folder
 add_subdirectory(robotic_car)
+add_subdirectory(robotic_car_maze)
