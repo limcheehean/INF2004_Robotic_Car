@@ -69,7 +69,7 @@ void decider_task( void *pvParameters ) {
                     if (left_wall_on || right_wall_on){
                         //target_heading = get_heading() + 45;
                         //xTimerReset(rotate_timer, portMAX_DELAY);
-                        turn_left_for_ticks(12000, 20);
+                        turn_left_for_ticks(100, 23);
                     }
                     break;
                 case D_NOT_BARCODE:
@@ -77,7 +77,7 @@ void decider_task( void *pvParameters ) {
                     if (left_wall_on || right_wall_on){
                         //target_heading = get_heading() + 45;
                         //xTimerReset(rotate_timer, portMAX_DELAY);
-                         turn_left_for_ticks(12000, 20);
+                         turn_left_for_ticks(100, 23);
                     }
                     break;
                 case D_ULTRASONIC_EVENT:
@@ -141,12 +141,14 @@ void decider_task( void *pvParameters ) {
 
 void init_decider(){
     g_decider_message_queue = xQueueCreate(30, sizeof(DeciderMessage_t));
+    /*
     xTaskCreate(decider_task,
                 "Decider Task",
                 configMINIMAL_STACK_SIZE,
                 ( void * ) &g_decider_message_queue, // Can try experimenting with parameter
                 tskIDLE_PRIORITY,
                 &g_decider_task_handle);
+    */
     
     printf("Decider initialized\n");
 }

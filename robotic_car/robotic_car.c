@@ -9,6 +9,7 @@
 #include "driver/ir_sensor/wall/wall_interrupt.c"
 #define DECIDER_INCLUDED
 #include "driver/ultra_sensor/ultra_sensor.c"
+#include "robotic_car_maze/maze.c"
 
 
 void generic_isr(uint gpio, uint32_t events) {

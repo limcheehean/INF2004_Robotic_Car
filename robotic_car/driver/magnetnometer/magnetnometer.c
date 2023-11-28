@@ -9,8 +9,8 @@
 
 #define I2C_PORT i2c0
 #define I2C_CLOCK_FREQ 100000
-#define I2C_SDA_PIN 0 // GPIO pin for I2C Serial Data (SDA)
-#define I2C_SCL_PIN 1 // GPIO pin for I2C Serial Clock (SCL)
+#define I2C_SDA_PIN 26 // GPIO pin for I2C Serial Data (SDA)
+#define I2C_SCL_PIN 27 // GPIO pin for I2C Serial Clock (SCL)
 
 #define ACC_ADDR 0x19 // I2C address of accelerometer
 #define MAG_ADDR 0x1E // I2C address of magnetometer

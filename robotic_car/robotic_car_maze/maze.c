@@ -2,7 +2,24 @@
 #include <stddef.h>
 #include <malloc.h>
 #include <pico/printf.h>
-//#include "../robotic_car/driver/motor/motor_controller.h"
+#include "../robotic_car/driver/motor/motor_controller.h"
+
+#ifndef ROBOTIC_MAZE_DEFINE
+#define ROBOTIC_MAZE_DEFINE
+#define MAP_WIDTH 6
+#define MAP_HEIGHT 4
+#define START_X 5
+#define START_Y 1
+#define END_X 0
+#define END_Y 2
+#endif
+
+#define MAP_WIDTH 6
+#define MAP_HEIGHT 4
+#define START_X 5
+#define START_Y 1
+#define END_X 0
+#define END_Y 2
 
 #define TICKS_TO_ROTATE_90 23
 #define TICKS_TO_MOVE_FORWARD 25
@@ -190,11 +207,11 @@ void move_to_block(struct block *block) {
         turn_ticks = 4 + turn_ticks;
     }
     turn_ticks *= TICKS_TO_ROTATE_90;
+    map->orientation = target_angle;
     
-    /*
-    turn_right_for_ticks(turn_ticks);
-    move_forward_for_ticks(TICKS_TO_MOVE_FORWARD);
-    */
+    turn_right_for_ticks(100,turn_ticks);
+    move_forward_for_ticks(100,100,TICKS_TO_MOVE_FORWARD, TICKS_TO_MOVE_FORWARD);
+    
     printf("TURNING RIGHT FOR %d TICKS!\n", turn_ticks);
     map->current_x = block->x;
     map->current_y = block->y;

@@ -104,7 +104,7 @@ void task_update_pwm_pid() {
        struct wheel_encoder_data * data = get_encoder_data();
 
        if (config->left_motor_status == 0  && config -> right_motor_status == 0){
-           printf("not moving");
+           //printf("not moving");
            vTaskDelay(pdMS_TO_TICKS(100));
            continue;
        }
@@ -114,11 +114,11 @@ void task_update_pwm_pid() {
        struct wheel_encoder * left_encoder = &data->left_encoder;
        struct wheel_encoder * right_encoder = &data->right_encoder;
         if (config -> left_motor_status != MOTOR_STATUS_STOPPED){
-            printf("Left not stop|");
+            //printf("Left not stop|");
             update_pwm_for_motor(left_motor, left_encoder);
         }
         if (config -> right_motor_status != MOTOR_STATUS_STOPPED){
-            printf("Right not stop|");
+            //printf("Right not stop|");
             update_pwm_for_motor(right_motor, right_encoder);
         }
 
@@ -352,7 +352,6 @@ void turn_right(float speed) {
     set_right_wheel_speed(speed);
 }
 
-
 void move_forward_for_ticks(float left_speed, float right_speed, int left_ticks, int right_ticks) {
     struct wheel_encoder_data * data = get_encoder_data();
     data->left_encoder.ticks_to_stop = left_ticks;
@@ -377,6 +376,26 @@ void turn_right_for_ticks(float speed, int ticks) {
     turn_right(speed);
     struct wheel_encoder_data * data = get_encoder_data();
     data->left_encoder.ticks_to_stop = ticks;
+}
+
+
+void rotate_left_for_ticks(float speed, int left_ticks, int right_ticks){
+    set_motor_status(MOTOR_STATUS_MOVING);
+    set_wheel_direction(BACKWARD, FORWARD);
+    set_wheel_speed(speed, speed);
+    struct wheel_encoder_data * data = get_encoder_data();
+    data->left_encoder.ticks_to_stop = left_ticks;
+    data->right_encoder.ticks_to_stop = right_ticks;
+}
+
+
+void rotate_right_for_ticks(float speed, int left_ticks, int right_ticks){
+    set_motor_status(MOTOR_STATUS_MOVING);
+    set_wheel_direction(FORWARD, BACKWARD);
+    set_wheel_speed(speed, speed);
+    struct wheel_encoder_data * data = get_encoder_data();
+    data->left_encoder.ticks_to_stop = left_ticks;
+    data->right_encoder.ticks_to_stop = right_ticks;
 }
 
 // Rotate about centre
