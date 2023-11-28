@@ -4,6 +4,8 @@
 #include <pico/printf.h>
 #include "../robotic_car/driver/motor/motor_controller.h"
 
+#define MAZE_IN_FREERTOS_TASK
+
 #ifndef ROBOTIC_MAZE_DEFINE
 #define ROBOTIC_MAZE_DEFINE
 #define MAP_WIDTH 6
@@ -21,7 +23,7 @@
 #define END_X 0
 #define END_Y 2
 
-#define TICKS_TO_ROTATE_90 23
+#define TICKS_TO_ROTATE_90 25
 #define TICKS_TO_MOVE_FORWARD 25
 
 typedef struct node {
@@ -54,6 +56,8 @@ typedef struct map {
     // Store node for djikstra queue
     struct node * head;
 } map;
+
+TaskHandle_t g_maze_task_handle;
 
 void print_list(node * head) {
     node *current = head;
@@ -209,10 +213,21 @@ void move_to_block(struct block *block) {
     turn_ticks *= TICKS_TO_ROTATE_90;
     map->orientation = target_angle;
     
-    turn_right_for_ticks(100,turn_ticks);
+    if (turn_ticks > 0){
+        printf("TURNING RIGHT FOR %d TICKS!\n", turn_ticks);
+        rotate_right_for_ticks(100,turn_ticks/2, turn_ticks/2);
+    }
+    #ifdef MAZE_IN_FREERTOS_TASK
+    vTaskDelay(pdMS_TO_TICKS(3000));
+    #endif
+
+    printf("MOVING FOrWARD FOR %d TICKS!\n", TICKS_TO_MOVE_FORWARD);
     move_forward_for_ticks(100,100,TICKS_TO_MOVE_FORWARD, TICKS_TO_MOVE_FORWARD);
     
-    printf("TURNING RIGHT FOR %d TICKS!\n", turn_ticks);
+    //sleep_ms(4000);
+    #ifdef MAZE_IN_FREERTOS_TASK
+    vTaskDelay(pdMS_TO_TICKS(3000));
+    #endif
     map->current_x = block->x;
     map->current_y = block->y;
 
@@ -352,4 +367,24 @@ void start_navigation() {
     }
     printf("%s\n", output_string);
 
+}
+
+
+void maze_task( void *pvParameters ) {
+
+    start_mapping();
+    vTaskDelete(NULL);
+}
+
+void init_maze_task(){
+    //g_decider_message_queue = xQueueCreate(30, sizeof(DeciderMessage_t));
+    
+    xTaskCreate(maze_task,
+                "Maze Task",
+                configMINIMAL_STACK_SIZE,
+                ( void * ) 0, // Can try experimenting with parameter
+                tskIDLE_PRIORITY,
+                &g_maze_task_handle);
+    
+    printf("Maze Task initialized\n");
 }

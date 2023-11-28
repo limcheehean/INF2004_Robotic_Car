@@ -7,7 +7,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
-#define I2C_PORT i2c0
+#define I2C_PORT i2c1
 #define I2C_CLOCK_FREQ 100000
 #define I2C_SDA_PIN 26 // GPIO pin for I2C Serial Data (SDA)
 #define I2C_SCL_PIN 27 // GPIO pin for I2C Serial Clock (SCL)
@@ -51,7 +51,9 @@ TaskHandle_t g_magnetometer_task_handle;
 
 void configure(uint8_t addr, uint8_t reg, uint8_t value) {
     uint8_t data[] = {reg, value};
+    printf("Gonna block my cock");
     i2c_write_blocking(I2C_PORT, addr, data, 2, false);
+    printf("Cock blocked");
 }
 
 uint8_t read(uint8_t addr, uint8_t reg) {
@@ -91,8 +93,8 @@ Calibrated_Data calibrate(int16_t x, int16_t y, int16_t z) {
 
     return calibrated_data;
 }
-/*
-int init_magnetometer(){
+
+int configure_magnetometer(){
     i2c_init(I2C_PORT, I2C_CLOCK_FREQ);
     i2c_set_slave_mode(I2C_PORT, false, 0);
     gpio_set_function(I2C_SDA_PIN, GPIO_FUNC_I2C);
@@ -102,7 +104,7 @@ int init_magnetometer(){
     configure(MAG_ADDR, MAG_MR_REG, 0x00);
 
     sleep_ms(3000);
-}*/
+}
 
 float get_heading(){
     Acc_Data acc_data;
@@ -163,6 +165,7 @@ int main() {
 }
 #endif
 void magnetometer_task( void *pvParameters ) {
+    /*
     i2c_init(I2C_PORT, I2C_CLOCK_FREQ);
     i2c_set_slave_mode(I2C_PORT, false, 0);
     gpio_set_function(I2C_SDA_PIN, GPIO_FUNC_I2C);
@@ -171,7 +174,8 @@ void magnetometer_task( void *pvParameters ) {
     configure(ACC_ADDR, ACC_CTRL_REG1, 0x57);
     configure(MAG_ADDR, MAG_MR_REG, 0x00);
 
-    vTaskDelay(pdMS_TO_TICKS(3000));
+    vTaskDelay(pdMS_TO_TICKS(3000));*/
+    printf("Magnetometer ready!\n");
     while (true) {
         // Extract and format the accelerometer data
         Acc_Data acc_data;
@@ -201,6 +205,10 @@ void magnetometer_task( void *pvParameters ) {
 }
 void init_magnetometer(){
     //g_decider_message_queue = xQueueCreate(30, sizeof(DeciderMessage_t));
+
+    printf("Configuring magnetometer\n");
+    configure_magnetometer();
+    printf(" Configure done ");
     xTaskCreate(magnetometer_task,
                 "Magnetometer Task",
                 configMINIMAL_STACK_SIZE,

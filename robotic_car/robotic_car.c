@@ -40,7 +40,7 @@ int main()
 
     barcode_driver_init();
 
-    //init_magnetometer();
+    init_magnetometer();
 
     //printf("Magnetometer initialized\n");
 
@@ -78,7 +78,9 @@ int main()
 
     printf("Move forwards!\n");
 
-
+    //init_maze_task();
+    //start_mapping();
+    //start_navigation();
     
     vTaskStartScheduler(); /* NEED THIS */
 
