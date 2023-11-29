@@ -11,10 +11,12 @@ A robotic car with maze mapping, navigation and barcode scanning capabilities, p
 8. 1x HC-SR04 Ultrasonic Sensor
 9. 1x GY-511 Magnetometer
 ## Pin Out for Raspberry Pi Pico W
+
 ## Set up of Pico SDK
 Download and install this tool if you are using Windows OS.
 
 Visual Studio Code will ask if you want to configure the pico-examples project when it is first opened; click Yes on that prompt to proceed. You will then be prompted to select a kit -- select the Pico ARM GCC - Pico SDK Toolchain with GCC arm-none-eabi entry.
+## Required Libraries
 
 ## Build, compile and run project
 
