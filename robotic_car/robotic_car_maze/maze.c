@@ -27,8 +27,8 @@
 #define END_X 0
 #define END_Y 2
 
-#define TICKS_TO_ROTATE_90 25
-#define TICKS_TO_MOVE_FORWARD 25
+#define TICKS_TO_ROTATE_90 35
+#define TICKS_TO_MOVE_FORWARD 35
 
 typedef struct node {
     struct node *next, *prev;
@@ -223,6 +223,8 @@ void move_to_block(struct block *block) {
         turn_ticks = 4 + turn_ticks;
     }
     //turn_ticks *= TICKS_TO_ROTATE_90;
+
+    /****
     turn_ticks *= 90;
     
     if (turn_ticks > 0){
@@ -241,9 +243,9 @@ void move_to_block(struct block *block) {
     #ifdef MAZE_IN_FREERTOS_TASK
     vTaskDelay(pdMS_TO_TICKS(3000));
     #endif*/
+    /******/
 
-
-    /********
+    
     int i = 0;
     xQueueReceive(get_encoder_data()->message_queue, &i, pdMS_TO_TICKS(100)); //clear queue
     if (turn_ticks > 0){
@@ -252,7 +254,7 @@ void move_to_block(struct block *block) {
             turn_left_for_ticks(13000,TICKS_TO_ROTATE_90);
             xQueueReceive(get_encoder_data()->message_queue, &i, portMAX_DELAY);
             vTaskDelay(pdMS_TO_TICKS(100));
-            move_forward_for_ticks(100,100, TICKS_TO_MOVE_FORWARD/2, TICKS_TO_MOVE_FORWARD/2);
+            move_forward_for_ticks(100,100, 11, 11);
             xQueueReceive(get_encoder_data()->message_queue, &i, portMAX_DELAY);
             xQueueReceive(get_encoder_data()->message_queue, &i, portMAX_DELAY);
         }
@@ -262,7 +264,7 @@ void move_to_block(struct block *block) {
             printf("Turn right 13000 %d\n", turn_ticks);
             xQueueReceive(get_encoder_data()->message_queue, &i, portMAX_DELAY);
             vTaskDelay(pdMS_TO_TICKS(100));
-            move_forward_for_ticks(100,100, TICKS_TO_MOVE_FORWARD/2, TICKS_TO_MOVE_FORWARD/2);
+            move_forward_for_ticks(100,100, 11, 11);
             
             xQueueReceive(get_encoder_data()->message_queue, &i, portMAX_DELAY);
             xQueueReceive(get_encoder_data()->message_queue, &i, portMAX_DELAY);
@@ -286,7 +288,9 @@ void move_to_block(struct block *block) {
 
         xQueueReceive(get_encoder_data()->message_queue, &i, portMAX_DELAY);
         xQueueReceive(get_encoder_data()->message_queue, &i, portMAX_DELAY);
-    }**********/
+    }
+    map->orientation = target_angle;
+    /**********/
     
     //sleep_ms(4000);
     #ifdef MAZE_IN_FREERTOS_TASK

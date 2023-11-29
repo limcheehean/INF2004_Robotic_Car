@@ -78,6 +78,9 @@ void decider_task( void *pvParameters ) {
                         //target_heading = get_heading() + 45;
                         //xTimerReset(rotate_timer, portMAX_DELAY);
                          turn_left_for_ticks(100, 23);
+                         vTaskDelay(pdMS_TO_TICKS(1500));
+                         move_forward_for_ticks(100,100,20,20);
+
                     }
                     break;
                 case D_ULTRASONIC_EVENT:
@@ -87,7 +90,7 @@ void decider_task( void *pvParameters ) {
                         move_backward_for_ticks(100, 100, 100, 100);
                         //printf("Reversing\n");
                         //add_alarm_in_ms(500, stop_reversing_isr, NULL, &reversing_stop_alarm);
-                        //xTimerReset(reversing_stop_timer,portMAX_DELAY);
+                        xTimerReset(reversing_stop_timer,portMAX_DELAY);
                     }
                     break;
 
@@ -141,14 +144,14 @@ void decider_task( void *pvParameters ) {
 
 void init_decider(){
     g_decider_message_queue = xQueueCreate(30, sizeof(DeciderMessage_t));
-    /*
+    
     xTaskCreate(decider_task,
                 "Decider Task",
                 configMINIMAL_STACK_SIZE,
                 ( void * ) &g_decider_message_queue, // Can try experimenting with parameter
                 tskIDLE_PRIORITY,
                 &g_decider_task_handle);
-    */
+    
     
     printf("Decider initialized\n");
 }

@@ -63,7 +63,8 @@ void update_pwm_for_motor(struct motor * motor, struct wheel_encoder * encoder) 
         float current_value = (encoder->ticks - motor->accumulated_ticks) ; // Check every 100 ms
         //float error = motor->ticks_per_second /10 - current_value;
         //float error = pid -> prev_error - current_value;
-        float error = 10 - current_value; //10 ticks per 100ms
+        //float error = 5 - current_value; //10 ticks per 100ms
+        float error = 3 - current_value; //10 ticks per 100ms
         //if (motor->accumulated_ticks == 0)
         pid->integral += error;
         float derivative = error - pid->prev_error;
@@ -89,6 +90,9 @@ void update_pwm_for_motor(struct motor * motor, struct wheel_encoder * encoder) 
         else if (motor -> pwm_level > 25000){
             motor -> pwm_level = 25000;
         }
+        // else if (motor -> pwm_level > 60000){
+        //     motor -> pwm_level = 60000;
+        // }
 
 
         /* Updated ticks */
@@ -122,11 +126,11 @@ void task_update_pwm_pid() {
        struct motor * right_motor = &config->right_motor;
        struct wheel_encoder * left_encoder = &data->left_encoder;
        struct wheel_encoder * right_encoder = &data->right_encoder;
-        if (config -> left_motor_status != MOTOR_STATUS_STOPPED && !config->left_motor.pid.spinning){
+        if (config -> left_motor_status != MOTOR_STATUS_STOPPED){ //&& !config->left_motor.pid.spinning){
             //printf("Left not stop|");
             update_pwm_for_motor(left_motor, left_encoder);
         }
-        if (config -> right_motor_status != MOTOR_STATUS_STOPPED && !config->right_motor.pid.spinning){
+        if (config -> right_motor_status != MOTOR_STATUS_STOPPED){ //&& !config->right_motor.pid.spinning){
             //printf("Right not stop|");
             update_pwm_for_motor(right_motor, right_encoder);
         }
@@ -184,13 +188,20 @@ void init_motor_controller(int left_pwm_pin,
     right_motor->backward_pin = right_backward_pin;
 
     /* pid to accomodote for individual motor characteristics */
-    left_motor -> pid.kp = 300.0f;
-    left_motor -> pid.ki = 7.5f;
-    left_motor -> pid.kd = 10.0f;
+    // left_motor -> pid.kp = 500.0f;
+    // left_motor -> pid.ki = 7.5f;
+    // left_motor -> pid.kd = 25.0f;
 
-    right_motor -> pid.kp = 300.0f;
-    right_motor -> pid.ki = 5.0f;
-    right_motor -> pid.kd = 10.0f;
+    left_motor -> pid.kp = 200.0f;
+    left_motor -> pid.ki = 7.5f;
+    left_motor -> pid.kd = 5.0f;
+
+    //right_motor -> pid.kp = 300.0f;
+    //right_motor -> pid.ki = 5.0f;
+    //right_motor -> pid.kd = 10.0f;
+    right_motor -> pid.kp = 220.0f;
+    right_motor -> pid.ki = 7.5f;
+    right_motor -> pid.kd = 2.5f;
 
     // Configure PWM
     gpio_set_function(left_pwm_pin, GPIO_FUNC_PWM);
@@ -201,11 +212,14 @@ void init_motor_controller(int left_pwm_pin,
     right_motor->channel = pwm_gpio_to_channel(right_pwm_pin);
     pwm_set_clkdiv(left_motor->slice, 100);
     pwm_set_clkdiv(right_motor->slice, 100);
-    pwm_set_wrap(left_motor->slice, 62500);
-    pwm_set_wrap(right_motor->slice, 62500);
+    //pwm_set_wrap(left_motor->slice, 62500);
+    //pwm_set_wrap(right_motor->slice, 62500);
 
-    //pwm_set_wrap(left_motor->slice, 25000);
-    //pwm_set_wrap(right_motor->slice, 25000);
+    // pwm_set_wrap(left_motor->slice, 25000);
+    // pwm_set_wrap(right_motor->slice, 25000);
+
+    pwm_set_wrap(left_motor->slice, 35000);
+    pwm_set_wrap(right_motor->slice, 35000);
     pwm_set_chan_level(left_motor->slice, left_motor->channel, 0);
     pwm_set_chan_level(right_motor->slice, right_motor->channel, 0);
     pwm_set_enabled(left_motor->slice, true);
