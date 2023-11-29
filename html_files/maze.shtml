@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="maze.css" />
+  </head>
+  <body>
+    <h2>Maze Layout</h2>
+    <div class="maze-container" id="maze">
+      <!-- Rows -->
+      <div class="maze-cell" id="Cell00"></div>
+      <div class="maze-cell" id="Cell10"></div>
+      <div class="maze-cell" id="Cell20"></div>
+      <div class="maze-cell" id="Cell30"></div>
+      <div class="maze-cell" id="Cell40"></div>
+      <div class="maze-cell" id="Cell50"></div>
+
+      <div class="maze-cell" id="Cell01"></div>
+      <div class="maze-cell" id="Cell11"></div>
+      <div class="maze-cell" id="Cell21"></div>
+      <div class="maze-cell" id="Cell31"></div>
+      <div class="maze-cell" id="Cell41"></div>
+      <div class="maze-cell" id="Cell51"></div>
+
+      <div class="maze-cell" id="Cell02"></div>
+      <div class="maze-cell" id="Cell12"></div>
+      <div class="maze-cell" id="Cell22"></div>
+      <div class="maze-cell" id="Cell32"></div>
+      <div class="maze-cell" id="Cell42"></div>
+      <div class="maze-cell" id="Cell52"></div>
+
+      <div class="maze-cell" id="Cell03"></div>
+      <div class="maze-cell" id="Cell13"></div>
+      <div class="maze-cell" id="Cell23"></div>
+      <div class="maze-cell" id="Cell33"></div>
+      <div class="maze-cell" id="Cell43"></div>
+      <div class="maze-cell" id="Cell53"></div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        // Get the maze container
+        const mazeContainer = document.getElementById("maze");
+
+        // Example data: specify borders for cells
+        const cellBorders = {
+
+
+          // "Cell00": ["add-left-border","add-right-border","add-top-border"],
+          // "Cell10": ["add-top-border"],
+          // "Cell20": ["add-bottom-border","add-top-border"],
+          // "Cell30": ["add-top-border"],
+          // "Cell40": ["add-top-border","add-bottom-border"],
+          // "Cell50": ["add-top-border","add-right-border"],
+
+          // "Cell01": ["add-left-border"],
+          // "Cell11": ["add-bottom-border"],
+          // "Cell21": ["add-right-border"],
+          // "Cell31": ["add-right-border"],
+          // "Cell41": ["add-bottom-border"],
+          // // "Cell51": ["no-right-border"],
+
+          // // "Cell02": ["no-left-border"],
+          // "Cell12": ["add-right-border","add-bottom-border"],
+          // "Cell22": ["add-right-border"],
+          // "Cell32": ["add-right-border"],
+          // "Cell52": ["add-right-border","add-bottom-border"],
+
+          // "Cell03": ["add-left-border","add-bottom-border","add-right-border"],
+          // "Cell13": ["add-bottom-border"],
+          // "Cell23": ["add-right-border","add-bottom-border"],
+          // "Cell33": ["add-right-border","add-bottom-border"],
+          // "Cell43": ["add-bottom-border"],
+          // "Cell53": ["add-bottom-border","add-right-border"]
+          // Add more cells and corresponding borders as needed
+        };
+
+        // Set the class for specified cells
+        // for (const [cellId, borders] of Object.entries(cellBorders)) {
+        //   const cell = mazeContainer.querySelector(`#${cellId}`);
+        //   borders.forEach(border => {
+        //     cell.classList.add(border);
+        //   });
+        // }
+
+        // Input string
+      const inputString = "(0,1) - top,bottom | (0,2) - bottom,left";
+
+      // Split the input string into individual cell-border pairs
+      const cellBorderPairs = inputString.split(" | ");
+
+      // Process each cell-border pair
+      cellBorderPairs.forEach(pair => {
+        // Extract cell coordinates and borders
+        const [coordinates, bordersStr] = pair.split(" - ");
+        const cellId = "Cell" + coordinates.replace(/[(),]/g, ""); // Convert (0,1) to Cell01
+        const borders = bordersStr.split(",");
+
+        // Update the cellBorders object
+        cellBorders[cellId] = borders;
+      });
+
+      // Set the class for specified cells
+      for (const [cellId, borders] of Object.entries(cellBorders)) {
+        const cell = mazeContainer.querySelector(`#${cellId}`);
+        borders.forEach(border => {
+          cell.classList.add("add-" + border + "-border");
+        });
+      }
+      });
+    </script>
+  </body>
+</html>
