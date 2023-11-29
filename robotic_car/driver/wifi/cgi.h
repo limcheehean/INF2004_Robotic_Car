@@ -47,7 +47,8 @@ const char *cgi_move_handler(int iIndex, int iNumParams, char *pcParam[], char *
         {
             stop();
             printf("[BACKWARD] Left: %.2f (%d ticks), Right: %.2f (%d ticks)\n", left_power, left_ticks, right_power, right_ticks);
-            move_backward_for_ticks(left_power, right_power, left_ticks, right_ticks);
+            //move_backward_for_ticks(left_power, right_power, left_ticks, right_ticks);
+            rotate_right_for_ticks(left_power, left_ticks, right_ticks);
         }
         else if (strcmp(pcValue[0], "left") == 0)
         {
