@@ -39,10 +39,13 @@ Ensure that you install the necessary libraries before executing the project.
 9. hardware_timer
 10. FreeRTOS-Kernel-Heap4
 ## Build, compile and run project
-Once "Pico - Visual Studio Code" (VSCode) is started, click the CMake icon and select pico_examples -> robotic_car and build robotic_car.elf.
+1. Once "Pico - Visual Studio Code" (VSCode) is started, click the CMake icon and select pico_examples -> robotic_car and build robotic_car.elf.
+
 The Raspberry Pi Pico has a built-in feature that makes it appear as a mass storage device when connected to a computer via USB.
-To get the board in bootloader mode ready for the firmware update, hold down the BOOTSEL button while plugging the board into USB. You can only release the button once you connect the pico to the PC/laptop properly.
-Drag and drop the robotic_car UF2 file onto Pico's virtual drive to upload firmware from INF2004_Robotic_Car\build\robotic_car\robotic_car.uf2
+
+2. To get the board in bootloader mode ready for the firmware update, hold down the BOOTSEL button while plugging the board into USB. You can only release the button once you connect the pico to the PC/laptop properly.
+
+3. Drag and drop the robotic_car UF2 file onto Pico's virtual drive to upload firmware from INF2004_Robotic_Car\build\robotic_car\robotic_car.uf2
 
 ## Block Diagram
 ![image](https://github.com/limcheehean/INF2004_Robotic_Car/assets/35133370/d978c355-1fe3-474b-acdd-8aaa2dfe0434)
