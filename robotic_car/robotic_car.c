@@ -70,7 +70,7 @@ int main()
 
     printf("Move forwards!\n");
 
-    init_maze_task();
+    //init_maze_task();
     //start_mapping();
     //start_navigation();
     
@@ -80,7 +80,7 @@ int main()
     gpio_set_irq_enabled(LEFT_IR_PIN, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true);
     gpio_set_irq_enabled(RIGHT_IR_PIN, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true);
     gpio_set_irq_enabled(ULTRA_ECHO_PIN, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true);
-    
+
     vTaskStartScheduler(); /* NEED THIS */
 
     while (true) {

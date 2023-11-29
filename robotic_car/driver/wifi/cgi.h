@@ -53,13 +53,15 @@ const char *cgi_move_handler(int iIndex, int iNumParams, char *pcParam[], char *
         {
             stop();
             printf("[LEFT] %.2f (%d ticks)\n", right_power, right_ticks);
-            rotate_left_for_ticks(right_power, left_ticks, right_ticks);
+            turn_left_for_ticks(right_power,right_ticks);
+            //rotate_left_for_ticks(right_power, left_ticks, right_ticks);
         }
         else if (strcmp(pcValue[0], "right") == 0)
         {
             stop();
             printf("[RIGHT] %.2f (%d ticks)\n", left_power, left_ticks);
-            rotate_right_for_ticks(left_power, left_ticks, right_ticks);
+            turn_right_for_ticks(left_power, left_ticks);
+            //rotate_right_for_ticks(left_power, left_ticks, right_ticks);
         }
         else if (strcmp(pcValue[0], "stop") == 0)
         {

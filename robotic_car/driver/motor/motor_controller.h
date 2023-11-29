@@ -68,13 +68,14 @@ void update_pwm_for_motor(struct motor * motor, struct wheel_encoder * encoder) 
         pid->integral += error;
         float derivative = error - pid->prev_error;
         float control_signal;
-        if (!motor->pid.spinning){
-            control_signal = pid->kp * error + pid->ki * pid->integral + pid->kd * derivative;
-        }
+        //if (!motor->pid.spinning){
+        control_signal = pid->kp * error + pid->ki * pid->integral + pid->kd * derivative;
+        //}
+        /*
         else {
             error = 3 - current_value;
             control_signal = 125 * error + 0.01 * pid->integral + pid->kd/3 * derivative;
-        }
+        }*/
 
         /* Assign curr error as previous */
         pid -> prev_error = error;
@@ -85,9 +86,9 @@ void update_pwm_for_motor(struct motor * motor, struct wheel_encoder * encoder) 
             motor->pwm_level = 0;
         }
 
-            else if (motor -> pwm_level > 25000){
-                motor -> pwm_level = 25000;
-            }
+        else if (motor -> pwm_level > 25000){
+            motor -> pwm_level = 25000;
+        }
 
 
         /* Updated ticks */
@@ -200,11 +201,11 @@ void init_motor_controller(int left_pwm_pin,
     right_motor->channel = pwm_gpio_to_channel(right_pwm_pin);
     pwm_set_clkdiv(left_motor->slice, 100);
     pwm_set_clkdiv(right_motor->slice, 100);
-    //pwm_set_wrap(left_motor->slice, 62500);
-    //pwm_set_wrap(right_motor->slice, 62500);
+    pwm_set_wrap(left_motor->slice, 62500);
+    pwm_set_wrap(right_motor->slice, 62500);
 
-    pwm_set_wrap(left_motor->slice, 25000);
-    pwm_set_wrap(right_motor->slice, 25000);
+    //pwm_set_wrap(left_motor->slice, 25000);
+    //pwm_set_wrap(right_motor->slice, 25000);
     pwm_set_chan_level(left_motor->slice, left_motor->channel, 0);
     pwm_set_chan_level(right_motor->slice, right_motor->channel, 0);
     pwm_set_enabled(left_motor->slice, true);

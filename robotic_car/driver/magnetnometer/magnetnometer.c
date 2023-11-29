@@ -6,6 +6,7 @@
 #include <math.h>
 #include "FreeRTOS.h"
 #include "task.h"
+#include "../encoder/wheel_encoder.h"
 //#include "../../robotic_car_maze/maze.c"
 
 #define I2C_PORT i2c1
@@ -184,11 +185,15 @@ void magnetometer_task( void *pvParameters ) {
     int message;
     bool checking = false;
 
+    QueueHandle_t encoder_mq = get_encoder_data()->message_queue;
+    int encoder_message_holder = 0;
     //int change_angle = 70;
     //xQueueSend(g_magnetometer_message_queue, &change_angle, portMAX_DELAY);
     while (true) {
         if (xQueueReceive(g_magnetometer_message_queue, &message, portMAX_DELAY) == pdPASS){
             checking = true;
+
+
 
             float original_heading = get_heading();
             if (original_heading < 0)
@@ -204,7 +209,7 @@ void magnetometer_task( void *pvParameters ) {
             }
 
             printf("Target heading: %2.2f\n", target_heading);
-            float min_heading_range = (float)target_heading - 2.5;
+            float min_heading_range = (float)target_heading - 1.5;
 
             if (min_heading_range < 0){
                 min_heading_range += 360;
@@ -213,7 +218,7 @@ void magnetometer_task( void *pvParameters ) {
                 min_heading_range -= 360;
             }
 
-            float max_heading_range = (float)target_heading + 2.5;
+            float max_heading_range = (float)target_heading + 35.5;
             
             if (max_heading_range < 0){
                 max_heading_range += 360;
@@ -222,8 +227,17 @@ void magnetometer_task( void *pvParameters ) {
                 max_heading_range -= 360;
             }
             // Start checking
+            float initial_heading  = get_heading();
+            if (initial_heading > target_heading){
+                target_heading += 360;
+            }
+            rotate_right_for_ticks(100,999,999);
             while (checking){
                 // Extract and format the accelerometer data
+
+                //rotate_right_for_ticks(12000,2,2);
+                //QueueReceive(encoder_mq, &encoder_message_holder, portMAX_DELAY);
+                //xQueueReceive(encoder_mq, &encoder_message_holder, portMAX_DELAY);
                 float heading = get_heading();
 
                 if (heading < 0)
@@ -232,10 +246,11 @@ void magnetometer_task( void *pvParameters ) {
                 //printf("Accelerometer x: %d y: %d z: %d\n", acc_data.x, acc_data.y, acc_data.z);
                 //printf("Magnetometer x: %d y: %d z: %d\n", mag_data.x, mag_data.y, mag_data.z);
                 printf("Heading: %.2f\n\n", heading);
-                rotate_right_for_ticks(6000,1,1);
                 vTaskDelay(pdMS_TO_TICKS(300));
+                
                 if (min_heading_range < max_heading_range ? heading > min_heading_range && heading < max_heading_range : 
                 heading > min_heading_range || heading < max_heading_range ){
+            
                     stop();
                     xQueueSend(g_maze_message_queue, &heading, portMAX_DELAY);
 

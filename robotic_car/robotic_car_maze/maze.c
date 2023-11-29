@@ -223,20 +223,27 @@ void move_to_block(struct block *block) {
         turn_ticks = 4 + turn_ticks;
     }
     //turn_ticks *= TICKS_TO_ROTATE_90;
-    //turn_ticks *= 90;
+    turn_ticks *= 90;
     
     if (turn_ticks > 0){
-        //printf("TURNING RIGHT FOR %d TICKS!\n", turn_ticks);
+        printf("TURNING RIGHT FOR %d TICKS!\n", turn_ticks);
         //rotate_right_for_ticks(100,9999,9999);
-        //xQueueSend(g_magnetometer_message_queue, &turn_ticks, portMAX_DELAY);
-        //xQueueSend(g_magnetometer_message_queue, &turn_ticks, portMAX_DELAY);
-        //xQueueReceive(g_maze_message_queue, &placeholder, portMAX_DELAY);
+        xQueueSend(g_magnetometer_message_queue, &turn_ticks, portMAX_DELAY);
+        xQueueReceive(g_maze_message_queue, &placeholder, portMAX_DELAY);
     }
     map->orientation = target_angle;
+    printf("MOVING FOrWARD FOR %d TICKS!\n", TICKS_TO_MOVE_FORWARD);
+    move_forward_for_ticks(100,100,TICKS_TO_MOVE_FORWARD, TICKS_TO_MOVE_FORWARD);
+    int i = 0;
+    xQueueReceive(get_encoder_data()->message_queue, &i, portMAX_DELAY);
+    xQueueReceive(get_encoder_data()->message_queue, &i, portMAX_DELAY);
     /*
     #ifdef MAZE_IN_FREERTOS_TASK
     vTaskDelay(pdMS_TO_TICKS(3000));
     #endif*/
+
+
+    /********
     int i = 0;
     xQueueReceive(get_encoder_data()->message_queue, &i, pdMS_TO_TICKS(100)); //clear queue
     if (turn_ticks > 0){
@@ -279,7 +286,7 @@ void move_to_block(struct block *block) {
 
         xQueueReceive(get_encoder_data()->message_queue, &i, portMAX_DELAY);
         xQueueReceive(get_encoder_data()->message_queue, &i, portMAX_DELAY);
-    }
+    }**********/
     
     //sleep_ms(4000);
     #ifdef MAZE_IN_FREERTOS_TASK
