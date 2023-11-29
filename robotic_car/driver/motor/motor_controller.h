@@ -53,7 +53,6 @@ struct motor_driver * get_configuration() {
 };
 
 void update_pwm_for_motor(struct motor * motor, struct wheel_encoder * encoder) {
-    if (!motor->pid.spinning){
         printf("PWM");
         static int count = 0;
 
@@ -68,7 +67,14 @@ void update_pwm_for_motor(struct motor * motor, struct wheel_encoder * encoder) 
         //if (motor->accumulated_ticks == 0)
         pid->integral += error;
         float derivative = error - pid->prev_error;
-        float control_signal = pid->kp * error + pid->ki * pid->integral + pid->kd * derivative;
+        float control_signal;
+        if (!motor->pid.spinning){
+            control_signal = pid->kp * error + pid->ki * pid->integral + pid->kd * derivative;
+        }
+        else {
+            error = 3 - current_value;
+            control_signal = 125 * error + 0.01 * pid->integral + pid->kd/3 * derivative;
+        }
 
         /* Assign curr error as previous */
         pid -> prev_error = error;
@@ -86,7 +92,6 @@ void update_pwm_for_motor(struct motor * motor, struct wheel_encoder * encoder) 
 
         /* Updated ticks */
         motor->accumulated_ticks = encoder->ticks;
-    }
    //encoder-> accumulated_ticks = 0;
 
    //if (count % 10 == 0)
@@ -195,6 +200,9 @@ void init_motor_controller(int left_pwm_pin,
     right_motor->channel = pwm_gpio_to_channel(right_pwm_pin);
     pwm_set_clkdiv(left_motor->slice, 100);
     pwm_set_clkdiv(right_motor->slice, 100);
+    //pwm_set_wrap(left_motor->slice, 62500);
+    //pwm_set_wrap(right_motor->slice, 62500);
+
     pwm_set_wrap(left_motor->slice, 25000);
     pwm_set_wrap(right_motor->slice, 25000);
     pwm_set_chan_level(left_motor->slice, left_motor->channel, 0);
@@ -404,8 +412,8 @@ void rotate_left_for_ticks(float speed, int left_ticks, int right_ticks){
 void rotate_right_for_ticks(float speed, int left_ticks, int right_ticks){
     set_motor_status(MOTOR_STATUS_MOVING);
     struct motor_driver * config = get_configuration();
-    config->left_motor.pid.spinning = 1;
-    config->right_motor.pid.spinning = 1;
+    //config->left_motor.pid.spinning = 1;
+    //config->right_motor.pid.spinning = 1;
     set_wheel_direction(FORWARD, BACKWARD);
     set_wheel_speed(speed, speed);
     struct wheel_encoder_data * data = get_encoder_data();
