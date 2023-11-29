@@ -1,6 +1,7 @@
 
 #include "decider.h"
 #include "timers.h"
+#include "driver/encoder/wheel_encoder.h"
 TaskHandle_t g_decider_task_handle;
 QueueHandle_t g_decider_message_queue;
 
@@ -32,6 +33,12 @@ void turning_callback(TimerHandle_t xTimer){
     turn_left(0.5);
 }
 
+void reset_speed_callback(TimerHandle_t xTimer){
+    get_configuration()->left_motor.target_speed = 3;
+    get_configuration()->right_motor.target_speed = 3;
+    set_wheel_direction(FORWARD, FORWARD);
+    printf("Unhaste\n");
+}
 
 void decider_task( void *pvParameters ) {
 
@@ -48,11 +55,13 @@ void decider_task( void *pvParameters ) {
     TimerHandle_t reversing_stop_timer = xTimerCreate ( "Stop reversing in...", pdMS_TO_TICKS(1000), pdFALSE,( void * ) 0,stop_reversing_callback);
     TimerHandle_t check_wall_timer = xTimerCreate("check if wall for ...", pdMS_TO_TICKS(150), pdFALSE, (void *) 0, check_wall_callback); //(150, check_wall_isr, 0, true);
     TimerHandle_t check_barcode_timer = xTimerCreate("check if barcode for ...", pdMS_TO_TICKS(150), pdFALSE, (void *) 0, check_barcode_callback); //add_alarm_in_ms(100, check_barcode_isr, 0 ,true);
-    
+    TimerHandle_t reset_speed_timer = xTimerCreate("Reset car speed...", pdMS_TO_TICKS(100), pdFALSE, (void *) 0, reset_speed_callback);
+
     bool calibrated = 0; /* Need to do a 360 spin */
     bool wall_or_bc_test = 0; /* Is the wall in front wall or barcode? */
     bool side_or_front_test = 0; /* is line or side or front? */
 
+    int i = 0;
     for (;;){
         if (xQueueReceive(g_decider_message_queue, &message, portMAX_DELAY) == pdPASS){
             
@@ -69,10 +78,11 @@ void decider_task( void *pvParameters ) {
                     if (left_wall_on || right_wall_on){
                         //target_heading = get_heading() + 45;
                         //xTimerReset(rotate_timer, portMAX_DELAY);
-                        turn_left_for_ticks(100, 23);
+                        //turn_left_for_ticks(100, 23);
                     }
                     break;
                 case D_NOT_BARCODE:
+                    /*
                     stop();
                     if (left_wall_on || right_wall_on){
                         //target_heading = get_heading() + 45;
@@ -81,11 +91,11 @@ void decider_task( void *pvParameters ) {
                          vTaskDelay(pdMS_TO_TICKS(1500));
                          move_forward_for_ticks(100,100,20,20);
 
-                    }
+                    }*/
                     break;
                 case D_ULTRASONIC_EVENT:
                     if (ultrasonic_enabled){
-                        stop();
+                        //stop();
                         ultrasonic_enabled = 0;
                         move_backward_for_ticks(100, 100, 100, 100);
                         //printf("Reversing\n");
@@ -107,10 +117,28 @@ void decider_task( void *pvParameters ) {
                     //rotate??
                 /* Keep driving forward */
                 case D_WALL_LEFT_EVENT: 
+                    //stop();
+                    //turn_right_for_ticks(10000,25);
+                    //xQueueReceive(get_encoder_data()->message_queue, &i, portMAX_DELAY );
+                    //move_forward_for_ticks(100,100,75,75);
+                    get_configuration()->left_motor.target_speed = 3;
+                    get_configuration()->right_motor.target_speed = 3;
+                    set_wheel_direction(FORWARD, BACKWARD);
+                    printf("Haste left\n");
+                    xTimerReset(reset_speed_timer, portMAX_DELAY);
+                    break;
                 case D_WALL_RIGHT_EVENT:
+                    get_configuration()->right_motor.target_speed = 3;
+                    get_configuration()->left_motor.target_speed = 3;
+                    set_wheel_direction(BACKWARD, FORWARD);
+                    printf("Haste right\n");
+                    xTimerReset(reset_speed_timer, portMAX_DELAY);
+                    break;
                 /* Currently facing wall */
+                /***
                     if (i_am_turning) break;
                     /* Bit set */
+                /***
                     if (message.type == D_WALL_LEFT_EVENT) {
                         if (message.data) left_wall_on = 1;
                         else left_wall_on = 0;
@@ -122,6 +150,7 @@ void decider_task( void *pvParameters ) {
                     printf(" event data: %d, %d|\n", left_wall_on, right_wall_on);
 
                     /* One white min */
+                    /***
                     if (! (left_wall_on && right_wall_on )){
                         xTimerStop(check_barcode_timer, portMAX_DELAY);
                         xTimerReset(check_wall_timer, portMAX_DELAY);
@@ -134,6 +163,7 @@ void decider_task( void *pvParameters ) {
                         xTimerReset(check_barcode_timer, portMAX_DELAY); //= //add_alarm_in_ms(100, check_barcode_isr, 0 ,true);
                     }
                     break;
+                    ***/
                 
             }
         }
