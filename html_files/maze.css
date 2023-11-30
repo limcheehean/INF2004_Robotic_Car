@@ -1,0 +1,56 @@
+.add-left-border {
+  border-left: 5px solid rgb(0, 0, 0);
+}
+
+.add-right-border {
+  border-right: 5px solid rgb(0, 0, 0);
+}
+
+.add-top-border {
+  border-top: 5px solid rgb(0, 0, 0);
+}
+
+.add-bottom-border {
+  border-bottom: 5px solid rgb(0, 0, 0);
+}
+
+.no-left-border {
+    border-left: none;
+}
+
+.no-right-border {
+    border-right: none;
+}
+
+.maze-container {
+  display: grid;
+  grid-template-columns: repeat(6, 140px);
+  grid-template-rows: repeat(4, 140px);
+}
+
+.maze-cell {
+  height: 140px;
+  width: 140px;
+  box-sizing: border-box;
+}
+
+/* #Cell00,#Cell10, #Cell20, #Cell30, #Cell40, #Cell50{
+    border-top: 5px solid rgb(0, 0, 0);
+}
+
+#Cell03,#Cell13, #Cell23, #Cell33, #Cell43, #Cell53{
+    border-bottom: 5px solid rgb(0, 0, 0);
+}
+
+#Cell00,#Cell01, #Cell02, #Cell03{
+    border-left: 5px solid rgb(0, 0, 0);
+}
+
+
+#Cell50,#Cell51, #Cell52, #Cell53{
+    border-right: 5px solid rgb(0, 0, 0);
+} */
+
+
+
+
