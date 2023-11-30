@@ -21,10 +21,9 @@ int main_2()
     // Initialize USB serial communication
     stdio_usb_init();
 
-    // Initialize CYW43 architecture
+    // Initialize CYW43 and enable sta mode
     cyw43_arch_init();
 
-    // Enable Station (STA) mode for Wi-Fi
     cyw43_arch_enable_sta_mode();
 
     // Connect to the WiFI network - loop until connected
@@ -80,7 +79,6 @@ int main()
     main_2();
     vTaskStartScheduler();
 
-    while (1)
-        ;
+    while (1);
 }
 #endif

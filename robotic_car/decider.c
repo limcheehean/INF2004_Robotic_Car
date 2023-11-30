@@ -22,6 +22,11 @@ QueueHandle_t g_decider_message_queue;
 /* An array to hold handles to the created timers. */
 TimerHandle_t xTimers[NUM_TIMERS];
 
+
+/**
+ * Timer callback functions below
+ * */
+
 // Function to send a message to the decider task
 // Queues an event in FreeRTOS task
 void message_decider(int type, int data)
@@ -32,25 +37,21 @@ void message_decider(int type, int data)
     xQueueSendToFrontFromISR(g_decider_message_queue, &message, 0);
 }
 
-// Timer callback functions
 void check_wall_callback(TimerHandle_t xTimer)
 {
     message_decider(D_NOT_SIDEWALL, 1);
 }
 
-// Timer callback functions
 void check_barcode_callback(TimerHandle_t xTimer)
 {
     message_decider(D_NOT_BARCODE, 1);
 }
 
-// Timer callback functions
 void stop_reversing_callback(TimerHandle_t xTimer)
 {
     message_decider(D_STOP_REVERSING, 1);
 }
 
-// Timer callback functions
 void turning_callback(TimerHandle_t xTimer)
 {
     // get heading
@@ -58,7 +59,6 @@ void turning_callback(TimerHandle_t xTimer)
     turn_left(0.5);
 }
 
-// Timer callback functions
 void reset_speed_callback(TimerHandle_t xTimer)
 {
     get_configuration()->left_motor.target_speed = 3;
