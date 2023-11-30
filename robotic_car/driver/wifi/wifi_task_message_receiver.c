@@ -38,6 +38,7 @@ void wifi_task_message_receive_task(void *pvParameters)
             }
 
             xQueueSend(g_concatenatedMessagesQueue, &totalMessage, 0);
+            printf(" I sent my ");
         }
     }
 

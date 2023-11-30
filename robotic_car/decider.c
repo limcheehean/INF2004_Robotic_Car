@@ -55,7 +55,7 @@ void decider_task( void *pvParameters ) {
     TimerHandle_t reversing_stop_timer = xTimerCreate ( "Stop reversing in...", pdMS_TO_TICKS(1000), pdFALSE,( void * ) 0,stop_reversing_callback);
     TimerHandle_t check_wall_timer = xTimerCreate("check if wall for ...", pdMS_TO_TICKS(150), pdFALSE, (void *) 0, check_wall_callback); //(150, check_wall_isr, 0, true);
     TimerHandle_t check_barcode_timer = xTimerCreate("check if barcode for ...", pdMS_TO_TICKS(150), pdFALSE, (void *) 0, check_barcode_callback); //add_alarm_in_ms(100, check_barcode_isr, 0 ,true);
-    TimerHandle_t reset_speed_timer = xTimerCreate("Reset car speed...", pdMS_TO_TICKS(100), pdFALSE, (void *) 0, reset_speed_callback);
+    TimerHandle_t reset_speed_timer = xTimerCreate("Reset car speed...", pdMS_TO_TICKS(500), pdFALSE, (void *) 0, reset_speed_callback);
 
     bool calibrated = 0; /* Need to do a 360 spin */
     bool wall_or_bc_test = 0; /* Is the wall in front wall or barcode? */
@@ -121,18 +121,46 @@ void decider_task( void *pvParameters ) {
                     //turn_right_for_ticks(10000,25);
                     //xQueueReceive(get_encoder_data()->message_queue, &i, portMAX_DELAY );
                     //move_forward_for_ticks(100,100,75,75);
-                    get_configuration()->left_motor.target_speed = 3;
-                    get_configuration()->right_motor.target_speed = 3;
-                    set_wheel_direction(FORWARD, BACKWARD);
-                    printf("Haste left\n");
-                    xTimerReset(reset_speed_timer, portMAX_DELAY);
+                    if (message.data && !right_wall_on) {
+                        left_wall_on = 1;
+                        get_configuration()->left_motor.target_speed = 3;
+                        get_configuration()->right_motor.target_speed = 3;
+                        set_wheel_direction(FORWARD, BACKWARD);
+                        printf("Haste left\n");
+                        xTimerReset(reset_speed_timer, portMAX_DELAY);
+                    }
+                    if (message.data && right_wall_on){
+                        left_wall_on = 1;
+                        get_configuration()->left_motor.target_speed = 4;
+                        get_configuration()->right_motor.target_speed = 4;
+                        set_wheel_direction(BACKWARD, BACKWARD);
+                        printf("Reverse\n");
+                        xTimerReset(reset_speed_timer, portMAX_DELAY);
+                    }
+                    if (!message.data){
+                        left_wall_on = 0;
+                    }
                     break;
                 case D_WALL_RIGHT_EVENT:
-                    get_configuration()->right_motor.target_speed = 3;
-                    get_configuration()->left_motor.target_speed = 3;
-                    set_wheel_direction(BACKWARD, FORWARD);
-                    printf("Haste right\n");
-                    xTimerReset(reset_speed_timer, portMAX_DELAY);
+                    if (message.data && !left_wall_on) {
+                        right_wall_on = 1;
+                        get_configuration()->right_motor.target_speed = 3;
+                        get_configuration()->left_motor.target_speed = 3;
+                        set_wheel_direction(BACKWARD, FORWARD);
+                        printf("Haste right\n");
+                        xTimerReset(reset_speed_timer, portMAX_DELAY);
+                    }
+                    if (message.data && left_wall_on){
+                        right_wall_on = 1;
+                        get_configuration()->right_motor.target_speed = 4;
+                        get_configuration()->left_motor.target_speed = 4;
+                        set_wheel_direction(BACKWARD, BACKWARD);
+                        printf("Backward\n");
+                        xTimerReset(reset_speed_timer, portMAX_DELAY);
+                    }
+                    if (!message.data){
+                        right_wall_on = 0;
+                    }
                     break;
                 /* Currently facing wall */
                 /***

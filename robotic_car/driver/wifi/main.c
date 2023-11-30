@@ -64,7 +64,7 @@ int main_2()
         printf("Error creating wifi_task_message_receive_task\n");
     }
 
-    g_concatenatedMessagesQueue = xQueueCreate(1, sizeof(MAX_MESSAGES));
+    g_concatenatedMessagesQueue = xQueueCreate(1, sizeof(WifiTaskMessage_t));
 
     if (g_concatenatedMessagesQueue == NULL)
     {

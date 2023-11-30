@@ -11,7 +11,7 @@
 #include "../ir_sensor/barcode_subcomponents/barcode_isr_data.h"
 #include <task.h>
 
-#define WIFI_TASK_MESSAGE_SIZE 30
+#define WIFI_TASK_MESSAGE_SIZE 100
 #define MAX_MESSAGES 100
 
 /* Used for communication between Interrupt and Task */
