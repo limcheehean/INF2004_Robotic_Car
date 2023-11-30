@@ -204,6 +204,8 @@ void magnetometer_task(void *pvParameters)
             float original_heading = get_heading();
             if (original_heading < 0)
                 original_heading += 360;
+
+            /* Normalize heading data */
             printf("Original heading: %2.2f\n", original_heading);
             float target_heading = original_heading + message;
             /* Put within 0 to 360 */
@@ -255,7 +257,11 @@ void magnetometer_task(void *pvParameters)
                 printf("Heading: %.2f\n\n", heading);
                 vTaskDelay(pdMS_TO_TICKS(300));
 
-                if (min_heading_range < max_heading_range ? heading > min_heading_range && heading < max_heading_range : heading > min_heading_range || heading < max_heading_range)
+                /* Check if heading is within min and max range*/
+                /* taking into account that heading is reset to 0 at 360 degrees */
+                if (min_heading_range < max_heading_range ? 
+                heading > min_heading_range && heading < max_heading_range : 
+                heading > min_heading_range || heading < max_heading_range)
                 {
 
                     stop();
@@ -267,6 +273,8 @@ void magnetometer_task(void *pvParameters)
         }
     }
 }
+
+/* Initialize Magnetometer task and queue */
 void init_magnetometer()
 {
     g_magnetometer_message_queue = xQueueCreate(3, sizeof(int));

@@ -1,7 +1,19 @@
+/***
+ * Decider
+ * Functions as the "brain" of the part
+ * Consists of:
+ * - freertos queue: To receive events from drivers
+ * - freertos task: To process received events
+ * - freertos timers: To perform functions after a set period of time
+ * 
+ * The decider task may message its own queue to queue an event to handle it later.
+ * Events are listed in decider.h
+ * */
 
 #include "decider.h"
 #include "timers.h"
 #include "driver/encoder/wheel_encoder.h"
+
 
 // Task handle and message queue for the decider task
 TaskHandle_t g_decider_task_handle;
@@ -11,6 +23,7 @@ QueueHandle_t g_decider_message_queue;
 TimerHandle_t xTimers[NUM_TIMERS];
 
 // Function to send a message to the decider task
+// Queues an event in FreeRTOS task
 void message_decider(int type, int data)
 {
     DeciderMessage_t message;
@@ -55,6 +68,10 @@ void reset_speed_callback(TimerHandle_t xTimer)
 }
 
 // Decider task implementation
+/***
+ * Decider task
+ * The "thinking"/"brain" part of the car
+ * */
 void decider_task(void *pvParameters)
 {
 
@@ -67,11 +84,12 @@ void decider_task(void *pvParameters)
     int target_heading = 0;
     float speed = 0.5;
     bool i_am_turning = 0;
+
+    /* Timers that can be reset to perform tasks */
     TimerHandle_t rotate_timer = xTimerCreate("Rotating!... ", pdMS_TO_TICKS(100), pdTRUE, (void *)0, turning_callback);
-    ;
     TimerHandle_t reversing_stop_timer = xTimerCreate("Stop reversing in...", pdMS_TO_TICKS(1000), pdFALSE, (void *)0, stop_reversing_callback);
-    TimerHandle_t check_wall_timer = xTimerCreate("check if wall for ...", pdMS_TO_TICKS(150), pdFALSE, (void *)0, check_wall_callback);          //(150, check_wall_isr, 0, true);
-    TimerHandle_t check_barcode_timer = xTimerCreate("check if barcode for ...", pdMS_TO_TICKS(150), pdFALSE, (void *)0, check_barcode_callback); // add_alarm_in_ms(100, check_barcode_isr, 0 ,true);
+    TimerHandle_t check_wall_timer = xTimerCreate("check if wall for ...", pdMS_TO_TICKS(150), pdFALSE, (void *)0, check_wall_callback);          
+    TimerHandle_t check_barcode_timer = xTimerCreate("check if barcode for ...", pdMS_TO_TICKS(150), pdFALSE, (void *)0, check_barcode_callback); 
     TimerHandle_t reset_speed_timer = xTimerCreate("Reset car speed...", pdMS_TO_TICKS(500), pdFALSE, (void *)0, reset_speed_callback);
 
     bool calibrated = 0;         /* Need to do a 360 spin */
@@ -86,6 +104,8 @@ void decider_task(void *pvParameters)
 
             switch (message.type)
             {
+
+            /* Stop turning. D_TURNING Event is sent to queue to remind car to stop turning after some time */
             case D_TURNING:
                 if (message.data > target_heading)
                 {
@@ -120,7 +140,8 @@ void decider_task(void *pvParameters)
                 stop();
                 ultrasonic_enabled = 1;
                 break;
-            /* Keep driving forward */
+
+            /* Upon seeing a wall, modify motor speed to move car away from wall */
             case D_WALL_LEFT_EVENT:
                 if (message.data && !right_wall_on)
                 {

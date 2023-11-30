@@ -35,22 +35,18 @@ void generic_isr(uint gpio, uint32_t events)
 // Main function
 int main()
 {
-    // Initialize motors
+    /* Initialize drivers and components */
     init_motor();
 
     // Run the WiFi main function
     main_2();
 
-    // Initialize barcode driver
     barcode_driver_init();
 
-    // Initialize magnetometer
     init_magnetometer();
 
-    // Initialize ultrasonic sensor
     init_ultrasonic();
 
-    // Initialize decider
     init_decider();
 
     // Set up GPIO interrupt callback

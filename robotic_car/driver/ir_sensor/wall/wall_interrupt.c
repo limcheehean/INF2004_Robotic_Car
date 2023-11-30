@@ -1,6 +1,12 @@
 #include "wall_interrupt.h"
 #include "decider.c"
 
+/** 
+ * Interrupt handler for wall ir sensors 
+ * Messages decider's queue if wall when enter or exit wall
+ * message data is set to 1 on enter, 0 on exit
+ * */
+
 void wall_edge_irq(uint gpio, uint32_t events){
     static BaseType_t taskPriorityl;
     DeciderMessage_t message;

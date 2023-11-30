@@ -11,16 +11,16 @@
 #include "queue.h"
 
 // Define constants for different types of events
-#define D_WALL_LEFT_EVENT 0
-#define D_WALL_RIGHT_EVENT 1
-#define D_BARCODE_EVENT 2
-#define D_ULTRASONIC_EVENT 3
-#define D_WALL_TESTING 4
-#define D_NOT_BARCODE 5
-#define D_TURNING 6
-#define D_NOT_SIDEWALL 7
-#define D_STOP_REVERSING 9
-#define D_TOGGLE_ULTRASONIC 10
+#define D_WALL_LEFT_EVENT 0 // wall detected on left
+#define D_WALL_RIGHT_EVENT 1 // wall detected on right
+#define D_BARCODE_EVENT 2 //Check if line is barcode
+#define D_ULTRASONIC_EVENT 3 // Ultrasonic detects and obstacle
+#define D_WALL_TESTING 4 // Event to test for wall
+#define D_NOT_BARCODE 5 // Line is detected to be not barcode
+#define D_TURNING 6 // Stop car from turning
+#define D_NOT_SIDEWALL 7 // Line is detected to not be sidewall
+#define D_STOP_REVERSING 9 // Stop car from reversing
+#define D_TOGGLE_ULTRASONIC 10 // Toggle ultrasonic event handling
 
 // Structure to represent a message for the decider
 typedef struct
