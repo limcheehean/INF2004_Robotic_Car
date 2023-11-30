@@ -1,8 +1,8 @@
-Wi-Fi Web Server README
+### Wi-Fi Web Server README
 
 This repository contains files for a simple Wi-Fi web server implemented on the Raspberry Pi Pico using the Pico SDK, FreeRTOS, and lwIP stack.
 
-Files Overview
+### Files Overview
 
 1. cgi.h
    This file defines Common Gateway Interface (CGI) handlers for various actions, such as LED control and robot movement. It utilizes the lwIP HTTP server.
@@ -28,7 +28,7 @@ Files Overview
 8. lwipopts.h
    Configuration file for the lwIP (Lightweight IP) stack that can customize various settings and features of lwIP to suit the requirements of the project.
 
-To get started:
+### To get started:
 
 Please execute the following steps
 
