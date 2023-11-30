@@ -2,19 +2,32 @@
 #include <stddef.h>
 #include <malloc.h>
 #include <pico/printf.h>
+#include <stdlib.h>
+#include <hardware/gpio.h>
 
+#define LEFT 0
+#define FRONT 1
+#define RIGHT 2
+#define BACK 3
+#define RESPONSE_NULL 0
+#define RESPONSE_YES 1
+#define RESPONSE_NO 2
+
+// Node to be built into linked list
 typedef struct node {
     struct node *next, *prev;
     struct block *block;
 } node;
 
+// Struct to store each block in map
 typedef struct block {
     int x, y, distance_from;
-    bool visited;
+    bool visited, shortest_path;
     struct block *visited_from;
     node *neighbour;
 } block;
 
+// Struct to store maze map
 typedef struct map {
     // Current coordinates of the car
     int current_x, current_y;
@@ -24,16 +37,17 @@ typedef struct map {
 
     // Store node for djikstra queue
     struct node * head;
+
+    // Store car orientation
+    int car_direction;
 } map;
 
-void print_list(node * head) {
-    node *current = head;
-    while (current != NULL) {
-        printf("Item (%d, %d)\n", current->block->x, current->block->y);
-        current = current->next;
-    }
-}
+// Struct to store response for wall check questions
+typedef struct response {
+    int response;
+} response;
 
+// Add node to end of linked list
 void add_node(node **head, block *block) {
     // Create node
     node *current = *head;
@@ -57,6 +71,7 @@ void add_node(node **head, block *block) {
     temp->prev = current;
 }
 
+// Add node to start of linked list
 void add_node_to_head(node ** head, block * block) {
     // Create node
     node *current = *head;
@@ -73,6 +88,7 @@ void add_node_to_head(node ** head, block * block) {
     *head = temp;
 }
 
+// Pop off the first node in linked list
 block * dequeue(node ** head) {
     node *temp = *head;
     *head = temp->next;
@@ -84,9 +100,45 @@ struct map * get_map() {
     return &map;
 }
 
+struct response * get_response() {
+    static struct response response;
+    return &response;
+}
+
+// Wait until a button is pressed on the Maker Pi Pico
+bool wait_for_response() {
+    response * response = get_response();
+    while (response->response == RESPONSE_NULL) {}
+    bool answer = response->response == RESPONSE_YES;
+    response->response = RESPONSE_NULL;
+    printf(answer == true ? "YES\n": "NO\n");
+    return answer;
+}
+
 // To implement with car control functions
 bool left_is_wall() {
     struct map * map = get_map();
+
+    if ((map->current_x == START_X && map->current_y == START_Y && ENTRY_DIRECTION == LEFT) || (map->current_x == END_X && map->current_y == END_Y && EXIT_DIRECTION == LEFT))
+        return true;
+
+    if (DEMO_MODE == 1) {
+        switch (map->car_direction) {
+            case LEFT:
+                printf("Is a wall in front of you?\n");
+                break;
+            case RIGHT:
+                return false;
+            case FRONT:
+                printf("Is a wall on your left?\n");
+                break;
+            case BACK:
+                printf("Is a wall on your right?\n");
+                break;
+        }
+        return wait_for_response();
+    }
+
     int x = map->current_x;
     int y = map->current_y;
     if (y == 0)
@@ -102,6 +154,27 @@ bool left_is_wall() {
 
 bool right_is_wall() {
     struct map * map = get_map();
+
+    if ((map->current_x == START_X && map->current_y == START_Y && ENTRY_DIRECTION == RIGHT) || (map->current_x == END_X && map->current_y == END_Y && EXIT_DIRECTION == RIGHT))
+        return true;
+
+    if (DEMO_MODE == 1) {
+        switch (map->car_direction) {
+            case LEFT:
+                return false;
+            case RIGHT:
+                printf("Is a wall in front of you?\n");
+                break;
+            case FRONT:
+                printf("Is a wall on your right?\n");
+                break;
+            case BACK:
+                printf("Is a wall on your left?\n");
+                break;
+        }
+        return wait_for_response();
+    }
+
     int x = map->current_x;
     int y = map->current_y;
     if (y == 0)
@@ -117,6 +190,27 @@ bool right_is_wall() {
 
 bool front_is_wall() {
     struct map * map = get_map();
+
+    if ((map->current_x == START_X && map->current_y == START_Y && ENTRY_DIRECTION == FRONT) || (map->current_x == END_X && map->current_y == END_Y && EXIT_DIRECTION == FRONT))
+        return true;
+
+    if (DEMO_MODE == 1) {
+        switch (map->car_direction) {
+            case LEFT:
+                printf("Is a wall on your right?\n");
+                break;
+            case RIGHT:
+                printf("Is a wall on your left?\n");
+                break;
+            case FRONT:
+                printf("Is a wall in front of you?\n");
+                break;
+            case BACK:
+                return false;
+        }
+        return wait_for_response();
+    }
+
     int x = map->current_x;
     int y = map->current_y;
     if (y == 0)
@@ -132,6 +226,27 @@ bool front_is_wall() {
 
 bool back_is_wall() {
     struct map * map = get_map();
+
+    if ((map->current_x == START_X && map->current_y == START_Y && ENTRY_DIRECTION == BACK) || (map->current_x == END_X && map->current_y == END_Y && EXIT_DIRECTION == BACK))
+        return true;
+
+    if (DEMO_MODE == 1) {
+        switch (map->car_direction) {
+            case LEFT:
+                printf("Is a wall to your left?\n");
+                break;
+            case RIGHT:
+                printf("Is a wall on your right?\n");
+                break;
+            case FRONT:
+                return false;
+            case BACK:
+                printf("Is a wall in front of you?\n");
+                break;
+        }
+        return wait_for_response();
+    }
+
     int x = map->current_x;
     int y = map->current_y;
     if (y == 0)
@@ -147,9 +262,36 @@ bool back_is_wall() {
 
 void move_to_block(struct block *block) {
     map * map = get_map();
-    printf("Moving car to (%d, %d)\n", block->x, block->y);
+
+    if (DEMO_MODE == 0)
+        printf("Moving car to (%d, %d)\n", block->x, block->y);
+
+    int target_direction = 0;
+    if (block->x == map->current_x - 1)
+        target_direction = LEFT;
+    else if (block->x == map->current_x + 1)
+        target_direction = RIGHT;
+    else if (block->y == map->current_y - 1)
+        target_direction = FRONT;
+    else if (block->y == map->current_y + 1)
+        target_direction = BACK;
+
+    int rotation = target_direction - map->car_direction;
+
+    if (DEMO_MODE == 1) {
+        if (rotation == -1 || rotation == 3)
+            printf("Turn left then move forward\n");
+        else if (rotation == 1 || rotation == -3)
+            printf("Turn right then move forward\n");
+        else if (abs(rotation) == 2)
+            printf("Turn around then move forward\n");
+        else
+            printf("Move forward\n");
+    }
+
     map->current_x = block->x;
     map->current_y = block->y;
+    map->car_direction = target_direction;
 }
 
 void dfs(struct block *block) {
@@ -191,8 +333,18 @@ void dfs(struct block *block) {
 
 }
 
+// ISR to respond YES and NO for wall check questions
+void press_button_isr(uint gpio, uint32_t events) {
+    response * response = get_response();
+    response->response = gpio == 20? RESPONSE_YES: RESPONSE_NO;
+}
+
 void start_mapping() {
-    
+
+    // Initialise GPIO 20 & 21 as YES and NO buttons on the Maker Pi Pico
+    gpio_set_irq_enabled_with_callback(20, GPIO_IRQ_EDGE_FALL,true,&press_button_isr);
+    gpio_set_irq_enabled_with_callback(21, GPIO_IRQ_EDGE_FALL,true,&press_button_isr);
+
     map * map = get_map();
     
     // Initialise all blocks
@@ -206,12 +358,13 @@ void start_mapping() {
     
     // Get starting block
     block * block = &map->blocks[START_X][START_Y];
+    map->car_direction = LEFT;
     
     // Perform dfs recursively
     dfs(block);
 
     printf("Mapping Complete!\n");
-    
+
 }
 
 void start_navigation() {
@@ -233,15 +386,13 @@ void start_navigation() {
     block->distance_from = 0;
     add_node(&map->head, block);
 
-
+    // Perform Dijkstra
     while (map->head != NULL) {
         block = dequeue(&map->head);
-        //printf("(%d, %d)\n", block->x, block->y);
         block->visited = true;
         node * current = block->neighbour;
         while (current != NULL) {
             struct block * neighbour = current->block;
-            //printf("Neighbour(%d, %d)\n", neighbour->x, neighbour->y);
             int distance = block->distance_from + 1;
             if (neighbour->distance_from > distance) {
                 neighbour->distance_from = distance;
@@ -255,34 +406,50 @@ void start_navigation() {
 
 
 
-    // Get target block
+    // Build shortest path
     block = &map->blocks[END_X][END_Y];
+    block->shortest_path = true;
     add_node_to_head(&map->head, block);
     while (block->x != START_X || block->y != START_Y) {
         block = block->visited_from;
+        block->shortest_path = true;
         add_node_to_head(&map->head, block);
     }
 
+    // Build shortest path string
+    char shortest_path[1000] = "";
     node * current = map->head;
     while (current != NULL) {
+        sprintf(shortest_path, "%s(%d, %d)", shortest_path, current->block->x, current->block->y);
         move_to_block(current->block);
+        if (current->next != NULL)
+            sprintf(shortest_path, "%s -> ", shortest_path);
         current = current->next;
     }
 
+    printf("Shortest Path: %s\n", shortest_path);
+
     printf("Navigation Complete!\n");
 
-    char output_string[1000] = "";
+    // Generate json to copy into mapping display
+    char output_string[2000] = "[";
     for (int x = 0; x < MAP_WIDTH; x++) {
         for (int y = 0; y < MAP_HEIGHT; y++) {
             block = &map->blocks[x][y];
-            sprintf(output_string, "%s (%d,%d)", output_string, block->x, block->y);
+            sprintf(output_string, "%s{\"x\": %d, \"y\":%d, \"shortest_path\":%d, \"neighbours\": [", output_string, block->x, block->y, block->shortest_path);
             node * neighbour = block->neighbour;
             while (neighbour != NULL) {
-                sprintf(output_string, "%s [%d,%d]", output_string, neighbour->block->x, neighbour->block->y);
+                sprintf(output_string, "%s{\"x\": %d, \"y\":%d}", output_string, neighbour->block->x, neighbour->block->y);
+                if (neighbour->next != NULL)
+                    sprintf(output_string, "%s, ", output_string);
                 neighbour = neighbour->next;
             }
+            sprintf(output_string, "%s]}", output_string);
+            if (x != MAP_WIDTH - 1 || y != MAP_HEIGHT - 1)
+                sprintf(output_string, "%s, ", output_string);
         }
     }
+    sprintf(output_string, "%s]", output_string);
     printf("%s\n", output_string);
 
 }

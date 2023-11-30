@@ -5,6 +5,9 @@
 #define START_Y 1
 #define END_X 0
 #define END_Y 2
+#define ENTRY_DIRECTION 2
+#define EXIT_DIRECTION 0
+#define DEMO_MODE 0
 
 #include <pico/time.h>
 #include <pico/stdio_usb.h>
