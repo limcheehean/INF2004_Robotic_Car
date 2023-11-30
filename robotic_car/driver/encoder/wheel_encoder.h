@@ -42,14 +42,21 @@ struct wheel_encoder_data *get_encoder_data()
     return &data;
 }
 
-// Interrupt Service Routine (ISR) for wheel movement
+/**
+ * Interrupt Service Routine (ISR) for wheel encoder
+ * On interrupt, increment number of ticks (activations) detected from each wheel
+ * If the wheel reaches the maximum number of activations it should turn,
+ * the ISR will stop the motor behind the wheel
+ * */
 void wheel_moved_isr(uint gpio, uint32_t events)
 {
     struct wheel_encoder_data *data = get_encoder_data();
     uint64_t current_time = time_us_64();
-    // Select the correct encoder based on GPIO
+    // Select the correct encoder based on GPIO, and increment no of ticks
     struct wheel_encoder *encoder = gpio == data->left_encoder.pin ? &data->left_encoder : &data->right_encoder;
     encoder->ticks++;
+
+    /* Stop wheel if max activation is reached */
     if (encoder->ticks >= encoder->ticks_to_stop && encoder->ticks_to_stop > 0)
     {
         int i = 0;

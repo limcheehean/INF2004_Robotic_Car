@@ -1,3 +1,4 @@
+/* Old version of barcode buffer management, for reference */
 #ifdef OLD_BUFFER_TESTING
 
 #include "pico/stdlib.h"
@@ -6,13 +7,11 @@
 // Define the size of the barcode buffer
 #define BARCODE_BUFFER_SIZE 9
 
-// Structure to represent the barcode buffer
 typedef struct
 {
     uint16_t buffer; // Binary representation
 } BarcodeBuffer_t;
 
-// Function to initialize the barcode buffer
 void init_barcode_buffer(BarcodeBuffer_t *barcode_buffer)
 {
     barcode_buffer->buffer = 0x0;
@@ -32,13 +31,13 @@ bool barcode_buffer_get(BarcodeBuffer_t *barcode_buffer, int logical_index)
     return (buffer_copy >> logical_index) & 0x1;
 }
 
-// Function to insert data into the barcode buffer
+// Insert new data into the barcode buffer
 void barcode_buffer_put(BarcodeBuffer_t *barcode_buffer, bool data_to_insert)
 {
     barcode_buffer->buffer = (barcode_buffer->buffer << 1) + data_to_insert;
 }
 
-// Function to reverse the bits in the barcode buffer
+// Reverse bits in the barcode buffer
 uint16_t barcode_buffer_reverse(BarcodeBuffer_t *barcode_buffer)
 {
     uint16_t reversed_buffer = 0;
@@ -56,7 +55,7 @@ uint16_t barcode_buffer_reverse(BarcodeBuffer_t *barcode_buffer)
     return reversed_buffer;
 }
 
-// Function to clear the barcode buffer
+// Clear barcode buffer by setting buffer to 0
 void barcode_buffer_clear(BarcodeBuffer_t *barcode_buffer)
 {
     barcode_buffer->buffer = 0x0;

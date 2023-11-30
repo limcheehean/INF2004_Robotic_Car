@@ -386,7 +386,8 @@ void turn_right(float speed)
     set_left_wheel_speed(speed);
 }
 
-// Function to move the car forward for a specified number of ticks on each wheel
+ // Car moves forward for specified number of ticks
+ // (Ticks refer to number of wheel encoder interrupts)
 void move_forward_for_ticks(float left_speed, float right_speed, int left_ticks, int right_ticks)
 {
     struct wheel_encoder_data *data = get_encoder_data();
@@ -395,7 +396,8 @@ void move_forward_for_ticks(float left_speed, float right_speed, int left_ticks,
     move_forward(left_speed, right_speed);
 }
 
-// Function to move the car backward for a specified number of ticks on each wheel
+ // Car reverses for specified number of ticks
+ // (Ticks refer to number of wheel encoder interrupts)
 void move_backward_for_ticks(float left_speed, float right_speed, int left_ticks, int right_ticks)
 {
     move_backward(left_speed, right_speed);
@@ -404,7 +406,8 @@ void move_backward_for_ticks(float left_speed, float right_speed, int left_ticks
     data->right_encoder.ticks_to_stop = right_ticks;
 }
 
-// Function to turn the car to the left for a specified number of ticks
+ // Turn car to left for specified number of ticks
+ // (Ticks refer to number of wheel encoder interrupts)
 void turn_left_for_ticks(float speed, int ticks)
 {
     struct wheel_encoder_data *data = get_encoder_data();
@@ -412,7 +415,8 @@ void turn_left_for_ticks(float speed, int ticks)
     turn_left(speed);
 }
 
-// Function to turn the car to the right for a specified number of ticks
+ // Turn car to right for specified number of ticks
+ // (Ticks refer to number of wheel encoder interrupts)
 void turn_right_for_ticks(float speed, int ticks)
 {
     struct wheel_encoder_data *data = get_encoder_data();
@@ -420,7 +424,13 @@ void turn_right_for_ticks(float speed, int ticks)
     turn_right(speed);
 }
 
-// Function to rotate the car to the left for a specified number of ticks on each wheel
+/**
+ * Rotate car to left for specified number of ticks
+ * (ticks refer to number of wheel encoder interrupts)
+ * 
+ * Rotate involves moving both wheels at the same speed
+ * with the left wheel reversing
+ * */
 void rotate_left_for_ticks(float speed, int left_ticks, int right_ticks)
 {
     set_motor_status(MOTOR_STATUS_MOVING);
@@ -432,7 +442,13 @@ void rotate_left_for_ticks(float speed, int left_ticks, int right_ticks)
     data->right_encoder.ticks_to_stop = right_ticks;
 }
 
-// Function to rotate the car to the right for a specified number of ticks on each wheel
+/**
+ * Rotate car to right for specified number of ticks
+ * (ticks refer to number of wheel encoder interrupts)
+ * 
+ * Rotate involves moving both wheels at the same speed,
+ * with the right wheel reversing
+ * */
 void rotate_right_for_ticks(float speed, int left_ticks, int right_ticks)
 {
     set_motor_status(MOTOR_STATUS_MOVING);

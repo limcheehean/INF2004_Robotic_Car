@@ -42,6 +42,16 @@ uint16_t reverse_binary(uint16_t value, int size){
     return reversed_value;
 }
 
+/**
+ * Differentiate between thin and thick line
+ * This is done by checking if :
+ * Twice the thickness of current line is smaller than previous line
+ * (if true, line is thin)
+ * or 
+ * Twice the thickness of previous line is smaller than current line
+ * (if true, line is thick)
+ * */
+
 void study_interrupt_value(
     BarcodeISRData_t * old_isr_data,
     BarcodeISRData_t * new_isr_data,
@@ -108,7 +118,7 @@ void study_interrupt_value(
     }
         
 
-
+/* "Read" the barcode buffer for characters */
 void interpret_barcode( uint16_t barcode_buffer, bool * next_is_quiet, bool * refresh_buffers){
     
     int index_to_copy = 0;

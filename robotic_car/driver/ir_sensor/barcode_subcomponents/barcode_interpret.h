@@ -37,6 +37,8 @@ char get_value_for_key(KeyValuePair dict[], int dictSize, int key)
 }
 
 // Function to get the barcode character for a given key
+// Barcode are stored as binary data
+// 1 represents thin line, 0 represents wide
 char get_barcode_char(int key)
 {
     static KeyValuePair barcode_dict[] = {
