@@ -47,6 +47,11 @@ The Raspberry Pi Pico has a built-in feature that makes it appear as a mass stor
 
 3. Drag and drop the robotic_car UF2 file onto Pico's virtual drive to upload firmware from INF2004_Robotic_Car\build\robotic_car\robotic_car.uf2
 
+## Maze Mapping and Navigation
+For mapping and navigation, the team has prepared a demostration without the 
+car under "robotic_car_maze_nocar".\
+Additional information can be found [here](robotic_car_maze_nocar/readme.md).
+
 ## Block Diagram
 ![image](https://github.com/limcheehean/INF2004_Robotic_Car/assets/35133370/d978c355-1fe3-474b-acdd-8aaa2dfe0434)
 ## Flow Chart
