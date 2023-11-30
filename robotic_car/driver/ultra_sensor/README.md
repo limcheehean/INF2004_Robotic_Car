@@ -31,3 +31,5 @@ The code incorporates a Kalman Filter for smoothing distance measurements.
 Ensure proper queue handling if used in an embedded system. The code includes a sample integration with a decider module.
 
 Feel free to modify and adapt this code for your specific use case.
+
+You may uncomment the printf() lines for testing and to showcase the ultrasonic readings.
