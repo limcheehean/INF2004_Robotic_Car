@@ -60,9 +60,7 @@ QueueHandle_t g_magnetometer_message_queue;
 void configure(uint8_t addr, uint8_t reg, uint8_t value)
 {
     uint8_t data[] = {reg, value};
-    printf("Gonna block my cock");
     i2c_write_blocking(I2C_PORT, addr, data, 2, false);
-    printf("Cock blocked");
 }
 
 // Function to read a value from a specific register using I2C

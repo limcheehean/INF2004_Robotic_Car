@@ -48,10 +48,6 @@ void study_interrupt_value(
     uint16_t * barcode_buffer_ptr,
     bool * next_is_quiet,
     bool * refresh_buffers){
-    
-    // static BarcodeISRData_t isr_data_buffer[BARCODE_BUFFER_SIZE ];
-    // static BarcodeISRData_t quiet_isr_data; /* Quiet zone */
-    // static bool quiet_data_exist = 0;
 
     static int count = 0; /* How many bars so far */
 
@@ -99,74 +95,6 @@ void study_interrupt_value(
     else{
         *barcode_buffer_ptr = (*barcode_buffer_ptr << 1) + new_isr_data->is_short;
     }
-
-    // if (* refresh_buffers) {
-
-    //     //printf("Refreshing buffers\n");
-    //     count = 0;
-    //     quiet_data_exist = 0;
-    //     * barcode_buffer_ptr = 0x0;
-    //     * refresh_buffers = false;
-    // }
-    // if ( * next_is_quiet) {
-        
-    //     quiet_isr_data = new_isr_data;
-    //     * next_is_quiet = false;
-    //     quiet_data_exist = 1;
-    //     return;
-    // }
-
-    
-    /* If ISR data buffer is full, shift all items back by 1 */
-
-    
-    // if (count >=  BARCODE_BUFFER_SIZE - 1){
-    //     for (int i = 1; i < BARCODE_BUFFER_SIZE; i++){
-    //         isr_data_buffer[i-1] = isr_data_buffer[i];
-    //     }
-    // }
-
-    // /* Assign new isr data to latest slot */
-    // isr_data_buffer[count++] = new_isr_data;
-    // //printf("mew isr data has %jd\n", count-1, new_isr_data.time_passed);
-
-    // /* If buffer is full, start finding average */
-
-    // if (count >= BARCODE_BUFFER_SIZE){
-    //     count=BARCODE_BUFFER_SIZE-1;
-
-    //     float total_items = BARCODE_BUFFER_SIZE;
-    //     float total_time_passed = 0;
-    //     float average = 0;
-
-
-    //     /* Iterate to find total */
-    //     for (int i = 0; i< BARCODE_BUFFER_SIZE; i++){
-    //         BarcodeISRData_t data = isr_data_buffer[i];
-    //         total_time_passed += (float) data.time_passed * data.wheel_encoder_speed; //speed * time
-    //         printf("%2.2f| ", (float) data.time_passed * data.wheel_encoder_speed);
-    //     }
-    //     //printf("our isr data at index %d has %jd\n", count, isr_data_buffer[count].time_passed);
-    //     printf("\n");
-    //     //include quiet zone into total calculation
-    //     if (quiet_data_exist) {
-    //         total_items += 1; 
-    //         total_time_passed += (float) quiet_isr_data.time_passed * quiet_isr_data.wheel_encoder_speed;
-    //     }
-
-    //     /* Find average */  
-    //     average = total_time_passed / total_items;
-    //     /* IMPROVEMENTS: Use quiet data as integrity check */
-
-    //     /* Reset barcode buffer, start setting bits to 1 if width is short */
-    //     * barcode_buffer_ptr = 0;
-    //     for (int i = 0; i < BARCODE_BUFFER_SIZE; i++) {
-
-    //         /* If time passed is than average, set corresponding bit to 1 */
-    //         if (  (float)isr_data_buffer[i].time_passed * isr_data_buffer[i].wheel_encoder_speed <= average){
-    //             *barcode_buffer_ptr |= ( 1 << i); 
-    //         }
-    //     }
         
         #ifndef NOT_DEBUGGING
         printf("[");
