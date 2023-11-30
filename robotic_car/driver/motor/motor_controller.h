@@ -58,6 +58,12 @@ struct motor_driver *get_configuration()
 };
 
 // Function to update PWM for a motor using PID control
+/**
+ * This pid uses speed as setpoint/ target value
+ * PID checks the number of wheel encoder interrupts every 100ms
+ * Speed and pid values (kd,kp,ki) can be set individually for different wheels
+ * 
+ * */
 void update_pwm_for_motor(struct motor *motor, struct wheel_encoder *encoder)
 {
 
