@@ -1,4 +1,3 @@
-
 #include "FreeRTOS.h"
 #include "task.h"
 #include "wifi_task_message_buffer.h"
@@ -20,9 +19,6 @@ void wifi_task_message_receive_task(void *pvParameters)
     {
         if (xQueueReceive(g_wifi_task_message_queue, &currentMessage, portMAX_DELAY) == pdPASS)
         {
-            /* Please remember that printf is not thread safe. Only for unit testing */
-            printf("Type: %d\n", currentMessage.type);
-            printf("Message: %s\n", currentMessage.message);
 
             totalMessage.type = currentMessage.type;
 
@@ -46,6 +42,7 @@ void wifi_task_message_receive_task(void *pvParameters)
     vTaskDelete(NULL);
 }
 
+// Task for testing data in WiFi task messages
 #ifndef DISABLE_WIFI_MAIN
 void wifi_task_message_receive_task_testData(void *pvParameters)
 {
@@ -65,33 +62,9 @@ void wifi_task_message_receive_task_testData(void *pvParameters)
     vTaskDelete(NULL);
 }
 #endif
+
+// Initialization of WiFi interrupt queue
 void init_wifi_intr_queue(QueueHandle_t *wifi_task_message_queue)
 {
     g_wifi_task_message_queue = *wifi_task_message_queue;
 }
-
-// void init_wifi_task_message_receive(){
-//     //init_barcode_buffer(get_barcode_buffer());
-//     g_wifi_task_message_queue =  xQueueCreate(5, sizeof(WifiTaskMessage_t));
-//     xTaskCreate(wifi_task_message_receive_task,
-//                 "Barcode Interpret Task",
-//                 configMINIMAL_STACK_SIZE,
-//                 ( void * ) 0, // Can try experimenting with parameter
-//                 tskIDLE_PRIORITY,
-//                 &g_wifi_task_message_task_handle);
-//     printf("task created");
-
-// }
-
-// void init_wifi_task_message_receive_test(){
-//     //init_barcode_buffer(get_barcode_buffer());
-//     g_concatenatedMessagesQueue = xQueueCreate(1, sizeof(MAX_MESSAGES));
-//     xTaskCreate(wifi_task_message_receive_task_test,
-//                 "Barcode Interpret Task Test",
-//                 configMINIMAL_STACK_SIZE,
-//                 ( void * ) 0, // Can try experimenting with parameter
-//                 tskIDLE_PRIORITY,
-//                 &g_wifi_task_message_task_handle_test);
-//     printf("test task created");
-
-// }

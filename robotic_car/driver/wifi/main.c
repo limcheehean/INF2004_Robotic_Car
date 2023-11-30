@@ -5,32 +5,26 @@
 #include "lwip/apps/httpd.h"
 #include "ssi.h"
 #include "cgi.h"
-//#include "wifi_task_message_receiver.c"
 #include "wifi_task_message_buffer.h"
-#define MAX_MESSAGES 100
 
 #ifndef PICO_MAX_SHARED_IRQ_HANDLERS
 #define PICO_MAX_SHARED_IRQ_HANDLERS 4u
 #endif
 
-// WIFI Credentials - take care if pushing to github!
-//const char WIFI_SSID[] = "POCO F4 GT"; //20V3
-//const char WIFI_PASSWORD[] = "qqsypbcppz7dt4m";
-//const char WIFI_SSID[] = "Thrith";
-//const char WIFI_PASSWORD[] = "reness10";
-const char WIFI_SSID[] = "AndroidAP_2237";
-const char WIFI_PASSWORD[] = "7322password";
-// Kanagarani2!
-// S20,reness10
-// ravirani, kanagarani18
+// WIFI Credentials - replace it with current user's credentials
+const char WIFI_SSID[] = "WIFISSID";
+const char WIFI_PASSWORD[] = "WIFIPASSWORD";
 
+// Entry point for the application
 int main_2()
 {
-
+    // Initialize USB serial communication
     stdio_usb_init();
 
+    // Initialize CYW43 architecture
     cyw43_arch_init();
 
+    // Enable Station (STA) mode for Wi-Fi
     cyw43_arch_enable_sta_mode();
 
     // Connect to the WiFI network - loop until connected
@@ -49,9 +43,7 @@ int main_2()
     ssi_init();
     printf("SSI Handler initialised\n");
 
-    //    cgi_init();
-    //    printf("CGI Handler initialised\n");
-
+    // Create a message queue for communication with the WiFi task
     g_wifi_task_message_queue = xQueueCreate(5, sizeof(WifiTaskMessage_t));
 
     if (g_wifi_task_message_queue == NULL)
@@ -59,11 +51,13 @@ int main_2()
         printf("Error creating g_wifi_task_message_queue\n");
     }
 
+    // Create a task for receiving WiFi task messages
     if (xTaskCreate(wifi_task_message_receive_task, "Wifi CurrentMessage Task", configMINIMAL_STACK_SIZE, (void *)0, tskIDLE_PRIORITY + 1, &g_wifi_task_message_task_handle) != pdPASS)
     {
         printf("Error creating wifi_task_message_receive_task\n");
     }
 
+    // Create a message queue for concatenated messages
     g_concatenatedMessagesQueue = xQueueCreate(1, sizeof(WifiTaskMessage_t));
 
     if (g_concatenatedMessagesQueue == NULL)
@@ -71,16 +65,18 @@ int main_2()
         printf("Error creating g_concatenatedMessagesQueue\n");
     }
 
-    #ifndef DISABLE_WIFI_MAIN
+// Conditionally create a task for receiving WiFi task test data messages
+#ifndef DISABLE_WIFI_MAIN
     if (xTaskCreate(wifi_task_message_receive_task_testData, "Wifi totalMessage Task", configMINIMAL_STACK_SIZE, (void *)0, tskIDLE_PRIORITY, &g_wifi_task_message_task_handle_test) != pdPASS)
     {
         printf("Error creating wifi_task_message_receive_task_test\n");
     }
-    #endif
+#endif
 }
 
 #ifndef DISABLE_WIFI_MAIN
-int main(){
+int main()
+{
     main_2();
     vTaskStartScheduler();
 
@@ -88,11 +84,3 @@ int main(){
         ;
 }
 #endif
-
-// #ifndef DISABLE_WIFI_MAIN
-// int main(){
-//     main_2();
-
-//     while (1);
-// }
-// #endif

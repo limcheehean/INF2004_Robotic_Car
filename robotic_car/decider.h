@@ -10,7 +10,8 @@
 #include "task.h"
 #include "queue.h"
 
-#define D_WALL_LEFT_EVENT 0 
+// Define constants for different types of events
+#define D_WALL_LEFT_EVENT 0
 #define D_WALL_RIGHT_EVENT 1
 #define D_BARCODE_EVENT 2
 #define D_ULTRASONIC_EVENT 3
@@ -21,12 +22,17 @@
 #define D_STOP_REVERSING 9
 #define D_TOGGLE_ULTRASONIC 10
 
-typedef struct {
+// Structure to represent a message for the decider
+typedef struct
+{
     int type;
     int data;
 } DeciderMessage_t;
 
+// Queue handle for the decider task
 QueueHandle_t g_decider_message_queue;
+
+// Function to initialize the decider
 void init_decider();
 
 #endif

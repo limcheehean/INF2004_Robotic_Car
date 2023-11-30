@@ -30,19 +30,25 @@
 #define TICKS_TO_ROTATE_90 35
 #define TICKS_TO_MOVE_FORWARD 35
 
-typedef struct node {
+// Structure to represent a linked list node
+typedef struct node
+{
     struct node *next, *prev;
     struct block *block;
 } node;
 
-typedef struct block {
+// Structure to represent a block in the maze
+typedef struct block
+{
     int x, y, distance_from;
     bool visited;
     struct block *visited_from;
     node *neighbour;
 } block;
 
-typedef struct map {
+// Structure to represent the maze map
+typedef struct map
+{
     // Current coordinates of the car
     int current_x, current_y;
 
@@ -58,29 +64,35 @@ typedef struct map {
     struct block blocks[MAP_WIDTH][MAP_HEIGHT];
 
     // Store node for djikstra queue
-    struct node * head;
+    struct node *head;
 } map;
 
 TaskHandle_t g_maze_task_handle;
 
-void print_list(node * head) {
+// Function to print the linked list
+void print_list(node *head)
+{
     node *current = head;
-    while (current != NULL) {
+    while (current != NULL)
+    {
         printf("Item (%d, %d)\n", current->block->x, current->block->y);
         current = current->next;
     }
 }
 
-void add_node(node **head, block *block) {
+// Function to add a node to the linked list
+void add_node(node **head, block *block)
+{
     // Create node
     node *current = *head;
-    node *temp = (node*)malloc(sizeof(node));
+    node *temp = (node *)malloc(sizeof(node));
     temp->block = block;
     temp->next = NULL;
     temp->prev = NULL;
 
     // First node
-    if (*head == NULL) {
+    if (*head == NULL)
+    {
         *head = temp;
         return;
     }
@@ -94,15 +106,18 @@ void add_node(node **head, block *block) {
     temp->prev = current;
 }
 
-void add_node_to_head(node ** head, block * block) {
+// Function to add a node to the head of the linked list
+void add_node_to_head(node **head, block *block)
+{
     // Create node
     node *current = *head;
-    node *temp = (node*)malloc(sizeof(node));
+    node *temp = (node *)malloc(sizeof(node));
     temp->block = block;
     temp->next = NULL;
     temp->prev = NULL;
 
-    if (*head != NULL) {
+    if (*head != NULL)
+    {
         temp->next = current;
         current->prev = temp;
     }
@@ -110,20 +125,25 @@ void add_node_to_head(node ** head, block * block) {
     *head = temp;
 }
 
-block * dequeue(node ** head) {
+// Function to dequeue a node from the linked list
+block *dequeue(node **head)
+{
     node *temp = *head;
     *head = temp->next;
     return temp->block;
 }
 
-struct map * get_map() {
+// Function to get the maze map
+struct map *get_map()
+{
     static struct map map;
     return &map;
 }
 
 // To implement with car control functions
-bool left_is_wall() {
-    struct map * map = get_map();
+bool left_is_wall()
+{
+    struct map *map = get_map();
     int x = map->current_x;
     int y = map->current_y;
     if (y == 0)
@@ -137,8 +157,9 @@ bool left_is_wall() {
     return false;
 }
 
-bool right_is_wall() {
-    struct map * map = get_map();
+bool right_is_wall()
+{
+    struct map *map = get_map();
     int x = map->current_x;
     int y = map->current_y;
     if (y == 0)
@@ -152,8 +173,9 @@ bool right_is_wall() {
     return false;
 }
 
-bool front_is_wall() {
-    struct map * map = get_map();
+bool front_is_wall()
+{
+    struct map *map = get_map();
     int x = map->current_x;
     int y = map->current_y;
     if (y == 0)
@@ -167,8 +189,9 @@ bool front_is_wall() {
     return false;
 }
 
-bool back_is_wall() {
-    struct map * map = get_map();
+bool back_is_wall()
+{
+    struct map *map = get_map();
     int x = map->current_x;
     int y = map->current_y;
     if (y == 0)
@@ -182,16 +205,21 @@ bool back_is_wall() {
     return false;
 }
 
-void calibrate_car(){
+// Function to calibrate the car
+void calibrate_car()
+{
     int turn_ticks = 350;
     int placeholder;
     xQueueSend(g_magnetometer_message_queue, &turn_ticks, portMAX_DELAY);
     xQueueReceive(g_maze_message_queue, &placeholder, portMAX_DELAY);
 }
-void move_to_block(struct block *block) {
+
+// Function to move the car to a specific block
+void move_to_block(struct block *block)
+{
 
     int placeholder;
-    map * map = get_map();
+    map *map = get_map();
     printf("Moving car to (%d, %d)\n", block->x, block->y);
     // start off facing left
     int turn_ticks = 0;
@@ -203,114 +231,99 @@ void move_to_block(struct block *block) {
      */
     int change_x = block->x - map->current_x;
     int target_angle = 0;
-    if (block -> x < map->current_x){
+    if (block->x < map->current_x)
+    {
         target_angle = 0;
     }
-    else if (block -> x > map->current_x){
+    else if (block->x > map->current_x)
+    {
         target_angle = 2;
     }
-    else if (block -> y > map->current_y){
+    else if (block->y > map->current_y)
+    {
         target_angle = 3;
     }
-    else if (block -> y < map->current_y){
+    else if (block->y < map->current_y)
+    {
         target_angle = 1;
     }
 
     // 0 - 3 = -3
     // 4 - 3 = 1
     turn_ticks = (target_angle - map->orientation);
-    if (turn_ticks < 0){
+    if (turn_ticks < 0)
+    {
         turn_ticks = 4 + turn_ticks;
     }
-    //turn_ticks *= TICKS_TO_ROTATE_90;
 
-    /****
-    turn_ticks *= 90;
-    
-    if (turn_ticks > 0){
-        printf("TURNING RIGHT FOR %d TICKS!\n", turn_ticks);
-        //rotate_right_for_ticks(100,9999,9999);
-        xQueueSend(g_magnetometer_message_queue, &turn_ticks, portMAX_DELAY);
-        xQueueReceive(g_maze_message_queue, &placeholder, portMAX_DELAY);
-    }
-    map->orientation = target_angle;
-    printf("MOVING FOrWARD FOR %d TICKS!\n", TICKS_TO_MOVE_FORWARD);
-    move_forward_for_ticks(100,100,TICKS_TO_MOVE_FORWARD, TICKS_TO_MOVE_FORWARD);
     int i = 0;
-    xQueueReceive(get_encoder_data()->message_queue, &i, portMAX_DELAY);
-    xQueueReceive(get_encoder_data()->message_queue, &i, portMAX_DELAY);
-    /*
-    #ifdef MAZE_IN_FREERTOS_TASK
-    vTaskDelay(pdMS_TO_TICKS(3000));
-    #endif*/
-    /******/
-
-    
-    int i = 0;
-    xQueueReceive(get_encoder_data()->message_queue, &i, pdMS_TO_TICKS(100)); //clear queue
-    if (turn_ticks > 0){
-        if (turn_ticks == -1 || turn_ticks == 3){
+    xQueueReceive(get_encoder_data()->message_queue, &i, pdMS_TO_TICKS(100)); // clear queue
+    if (turn_ticks > 0)
+    {
+        if (turn_ticks == -1 || turn_ticks == 3)
+        {
             printf("Turn left 13000, %d\n", turn_ticks);
-            turn_left_for_ticks(13000,TICKS_TO_ROTATE_90);
+            turn_left_for_ticks(13000, TICKS_TO_ROTATE_90);
             xQueueReceive(get_encoder_data()->message_queue, &i, portMAX_DELAY);
             vTaskDelay(pdMS_TO_TICKS(100));
-            move_forward_for_ticks(100,100, 11, 11);
+            move_forward_for_ticks(100, 100, 11, 11);
             xQueueReceive(get_encoder_data()->message_queue, &i, portMAX_DELAY);
             xQueueReceive(get_encoder_data()->message_queue, &i, portMAX_DELAY);
         }
-        else if (turn_ticks == 1){
-            turn_right_for_ticks(13000,TICKS_TO_ROTATE_90);
-            
+        else if (turn_ticks == 1)
+        {
+            turn_right_for_ticks(13000, TICKS_TO_ROTATE_90);
+
             printf("Turn right 13000 %d\n", turn_ticks);
             xQueueReceive(get_encoder_data()->message_queue, &i, portMAX_DELAY);
             vTaskDelay(pdMS_TO_TICKS(100));
-            move_forward_for_ticks(100,100, 11, 11);
-            
+            move_forward_for_ticks(100, 100, 11, 11);
+
             xQueueReceive(get_encoder_data()->message_queue, &i, portMAX_DELAY);
             xQueueReceive(get_encoder_data()->message_queue, &i, portMAX_DELAY);
         }
-        else{
+        else
+        {
 
             printf("Turn else 13000 %d\n", turn_ticks);
-            rotate_right_for_ticks(13000,TICKS_TO_ROTATE_90,TICKS_TO_ROTATE_90);
-            
+            rotate_right_for_ticks(13000, TICKS_TO_ROTATE_90, TICKS_TO_ROTATE_90);
+
             xQueueReceive(get_encoder_data()->message_queue, &i, portMAX_DELAY);
             vTaskDelay(pdMS_TO_TICKS(100));
-            move_forward_for_ticks(100,100, TICKS_TO_MOVE_FORWARD/2, TICKS_TO_MOVE_FORWARD/2);
-            
+            move_forward_for_ticks(100, 100, TICKS_TO_MOVE_FORWARD / 2, TICKS_TO_MOVE_FORWARD / 2);
+
             xQueueReceive(get_encoder_data()->message_queue, &i, portMAX_DELAY);
             xQueueReceive(get_encoder_data()->message_queue, &i, portMAX_DELAY);
         }
     }
-    else {
+    else
+    {
         printf("MOVING FOrWARD FOR %d TICKS!\n", TICKS_TO_MOVE_FORWARD);
-        move_forward_for_ticks(100,100,TICKS_TO_MOVE_FORWARD, TICKS_TO_MOVE_FORWARD);
+        move_forward_for_ticks(100, 100, TICKS_TO_MOVE_FORWARD, TICKS_TO_MOVE_FORWARD);
 
         xQueueReceive(get_encoder_data()->message_queue, &i, portMAX_DELAY);
         xQueueReceive(get_encoder_data()->message_queue, &i, portMAX_DELAY);
     }
     map->orientation = target_angle;
-    /**********/
-    
-    //sleep_ms(4000);
-    #ifdef MAZE_IN_FREERTOS_TASK
+
+#ifdef MAZE_IN_FREERTOS_TASK
     vTaskDelay(pdMS_TO_TICKS(1000));
-    #endif
+#endif
     map->current_x = block->x;
     map->current_y = block->y;
-
-    
 }
 
-void dfs(struct block *block) {
-    
-    map * map = get_map();
+// Depth-first search algorithm for maze mapping
+void dfs(struct block *block)
+{
+
+    map *map = get_map();
     int x = block->x;
     int y = block->y;
 
     map->current_x = x;
     map->current_y = y;
-    
+
     // Check for neighbour
     if (!left_is_wall())
         add_node(&block->neighbour, &map->blocks[x - 1][y]);
@@ -327,9 +340,11 @@ void dfs(struct block *block) {
     block->visited = true;
 
     // Go to each neighbour
-    node * neighbour = block->neighbour;
-    while (neighbour != NULL) {
-        if (!neighbour->block->visited) {
+    node *neighbour = block->neighbour;
+    while (neighbour != NULL)
+    {
+        if (!neighbour->block->visited)
+        {
             // Move to neighbour
             move_to_block(neighbour->block);
             dfs(neighbour->block);
@@ -338,41 +353,46 @@ void dfs(struct block *block) {
         }
         neighbour = neighbour->next;
     }
-
 }
 
-void start_mapping() {
-    
-    map * map = get_map();
-    //calibrate_car();
-    
+// Function to start the mapping process
+void start_mapping()
+{
+
+    map *map = get_map();
+
     // Initialise all blocks
-    for (int x = 0; x < MAP_WIDTH; x++) {
-        for (int y = 0; y < MAP_HEIGHT; y++) {
-            block * block = &map->blocks[x][y];
+    for (int x = 0; x < MAP_WIDTH; x++)
+    {
+        for (int y = 0; y < MAP_HEIGHT; y++)
+        {
+            block *block = &map->blocks[x][y];
             block->x = x;
             block->y = y;
         }
     }
-    
+
     // Get starting block
-    block * block = &map->blocks[START_X][START_Y];
-    
+    block *block = &map->blocks[START_X][START_Y];
+
     // Perform dfs recursively
     dfs(block);
 
     printf("Mapping Complete!\n");
-    
 }
 
-void start_navigation() {
+// Function to start the navigation process
+void start_navigation()
+{
 
-    map * map = get_map();
+    map *map = get_map();
 
     // Reset visited for all blocks
-    for (int x = 0; x < MAP_WIDTH; x++) {
-        for (int y = 0; y < MAP_HEIGHT; y++) {
-            block * block = &map->blocks[x][y];
+    for (int x = 0; x < MAP_WIDTH; x++)
+    {
+        for (int y = 0; y < MAP_HEIGHT; y++)
+        {
+            block *block = &map->blocks[x][y];
             block->visited = false;
             block->distance_from = 1000;
             block->visited_from = NULL;
@@ -380,21 +400,23 @@ void start_navigation() {
     }
 
     // Get starting block
-    block * block = &map->blocks[START_X][START_Y];
+    block *block = &map->blocks[START_X][START_Y];
     block->distance_from = 0;
     add_node(&map->head, block);
 
-
-    while (map->head != NULL) {
+    while (map->head != NULL)
+    {
         block = dequeue(&map->head);
-        //printf("(%d, %d)\n", block->x, block->y);
+        // printf("(%d, %d)\n", block->x, block->y);
         block->visited = true;
-        node * current = block->neighbour;
-        while (current != NULL) {
-            struct block * neighbour = current->block;
-            //printf("Neighbour(%d, %d)\n", neighbour->x, neighbour->y);
+        node *current = block->neighbour;
+        while (current != NULL)
+        {
+            struct block *neighbour = current->block;
+            // printf("Neighbour(%d, %d)\n", neighbour->x, neighbour->y);
             int distance = block->distance_from + 1;
-            if (neighbour->distance_from > distance) {
+            if (neighbour->distance_from > distance)
+            {
                 neighbour->distance_from = distance;
                 neighbour->visited_from = block;
             }
@@ -404,18 +426,18 @@ void start_navigation() {
         }
     }
 
-
-
     // Get target block
     block = &map->blocks[END_X][END_Y];
     add_node_to_head(&map->head, block);
-    while (block->x != START_X || block->y != START_Y) {
+    while (block->x != START_X || block->y != START_Y)
+    {
         block = block->visited_from;
         add_node_to_head(&map->head, block);
     }
 
-    node * current = map->head;
-    while (current != NULL) {
+    node *current = map->head;
+    while (current != NULL)
+    {
         move_to_block(current->block);
         current = current->next;
     }
@@ -423,38 +445,42 @@ void start_navigation() {
     printf("Navigation Complete!\n");
 
     char output_string[1000] = "";
-    for (int x = 0; x < MAP_WIDTH; x++) {
-        for (int y = 0; y < MAP_HEIGHT; y++) {
+    for (int x = 0; x < MAP_WIDTH; x++)
+    {
+        for (int y = 0; y < MAP_HEIGHT; y++)
+        {
             block = &map->blocks[x][y];
             sprintf(output_string, "%s (%d,%d)", output_string, block->x, block->y);
-            node * neighbour = block->neighbour;
-            while (neighbour != NULL) {
+            node *neighbour = block->neighbour;
+            while (neighbour != NULL)
+            {
                 sprintf(output_string, "%s [%d,%d]", output_string, neighbour->block->x, neighbour->block->y);
                 neighbour = neighbour->next;
             }
         }
     }
     printf("%s\n", output_string);
-
 }
 
-
-void maze_task( void *pvParameters ) {
+// Maze task
+void maze_task(void *pvParameters)
+{
 
     start_mapping();
     vTaskDelete(NULL);
 }
 
-void init_maze_task(){
-    //g_decider_message_queue = xQueueCreate(30, sizeof(DeciderMessage_t));
-    
+// Initialization function for the maze task
+void init_maze_task()
+{
+
     xTaskCreate(maze_task,
                 "Maze Task",
                 configMINIMAL_STACK_SIZE,
-                ( void * ) 0, // Can try experimenting with parameter
+                (void *)0,
                 tskIDLE_PRIORITY,
                 &g_maze_task_handle);
-    
+
     printf("Maze Task initialized\n");
 }
 

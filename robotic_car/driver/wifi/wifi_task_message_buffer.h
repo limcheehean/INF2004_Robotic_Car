@@ -1,4 +1,3 @@
-// wifi_task_message_buffer.h
 #ifndef WIFI_TASK_MESSAGE_BUFFER_H
 #define WIFI_TASK_MESSAGE_BUFFER_H
 #include <sys/cdefs.h>
@@ -35,5 +34,4 @@ extern QueueHandle_t g_update_ssi_queue;
 extern TaskHandle_t g_wifi_task_message_task_handle;
 extern TaskHandle_t g_wifi_task_message_task_handle_test;
 
-//void init_wifi_task_message_receive();
 #endif /* WIFI_TASK_MESSAGE_BUFFER_H */

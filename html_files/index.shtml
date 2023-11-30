@@ -3,6 +3,7 @@
   <head>
     <title>Pico-W Wifi Webserver</title>
     <style>
+      /* Styling for the body */
       body {
         font-family: Arial, sans-serif;
         background-color: #f0f0f0;
@@ -10,20 +11,24 @@
         padding: 20px;
       }
 
+      /* Styling for the main heading */
       h1 {
         color: #007bff;
         font-size: 28px;
       }
 
+      /* Styling for secondary headings */
       h2 {
         color: #333;
         font-size: 22px;
       }
 
+      /* Styling for paragraphs */
       p {
         font-size: 18px;
       }
 
+      /* Styling for buttons */
       button {
         background-color: #007bff;
         color: #fff;
@@ -34,6 +39,7 @@
         margin: 10px;
       }
 
+      /* Styling for links */
       a {
         text-decoration: none;
         color: #007bff;
@@ -49,9 +55,12 @@
     </script>
   </head>
   <body>
+    <!-- Main heading of the page -->
     <h1>Pico-W Wifi Webserver</h1>
     <br />
+    <!-- Secondary heading for Server Side Includes (SSI) -->
     <h2>Server Side Includes (SSI):</h2>
+    <!-- Paragraphs displaying server-side information -->
     <p>
       Voltage:
       <!--#volt-->
@@ -70,11 +79,14 @@
       <!--#message-->
     </p>
     <br />
+    <!-- Secondary heading for Common Gateway Interface (CGI) -->
     <h2>Common Gateway Interface (CGI):</h2>
+    <!-- Buttons to control LED through CGI -->
     <a href="/led.cgi?led=1"><button>Turn LED ON</button></a>
     <a href="/led.cgi?led=0"><button>Turn LED OFF</button></a>
     <br />
     <br />
+    <!-- Link to refresh the page -->
     <a href="/index.shtml">Refresh</a>
   </body>
 </html>

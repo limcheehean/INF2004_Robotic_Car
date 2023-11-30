@@ -13,12 +13,22 @@
 #include <pico/stdio_usb.h>
 #include "maze.c"
 
+// Main function
+int main()
+{
 
-
-int main() {
+    // Initialize USB for standard I/O
     stdio_usb_init();
+
+    // Wait for 9000 milliseconds (9 seconds) to allow USB initialization
     sleep_ms(9000);
+
+    // Start the mapping process
     start_mapping();
+
+    // Start the navigation process
     start_navigation();
+
+    // Infinite loop to keep the program running
     while (true);
 }
