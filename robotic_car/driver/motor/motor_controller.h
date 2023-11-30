@@ -28,7 +28,8 @@ struct motor
     int pwm_level;
     struct pid pid;
 
-    float target_speed;
+    // target speed each wheel should achieve (the "setpoint" for pid)
+    float target_speed; 
 };
 
 // Structure to represent a motor driver controlling left and right motors
@@ -96,6 +97,7 @@ void update_pwm_for_motor(struct motor *motor, struct wheel_encoder *encoder)
 }
 
 // Task to update PWM using PID control for both left and right motors
+// Update is done every 10ms
 void task_update_pwm_pid()
 {
 
